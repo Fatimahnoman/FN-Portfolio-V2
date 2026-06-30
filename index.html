@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Whimsical Garden Whack-a-Mole</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    background: linear-gradient(180deg, #cdeefd 0%, #e6f7ff 35%, #d8f3dc 100%);
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  .stage {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform-origin: center center;
+  }
+
+  .stage.shake {
+    animation: shake 0.25s ease;
+  }
+
+  @keyframes shake {
+    0% { transform: translate(0,0); }
+    20% { transform: translate(-6px,3px); }
+    40% { transform: translate(5px,-3px); }
+    60% { transform: translate(-4px,2px); }
+    80% { transform: translate(3px,-1px); }
+    100% { transform: translate(0,0); }
+  }
+
+  .hud {
+    width: 100%;
+    max-width: 520px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px 4px;
+    box-sizing: border-box;
+    z-index: 2;
+  }
+
+  .score-box {
+    background: #fff8e7;
+    border: 3px solid #f4b942;
+    border-radius: 16px;
+    padding: 8px 18px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #7a4b00;
+    box-shadow: 0 4px 0 #e0a02c;
+  }
+
+  .title {
+    font-size: 22px;
+    font-weight: bold;
+    color: #4a7c3a;
+    text-shadow: 1px 1px 0 #ffffff;
+    margin: 6px 0 0;
+  }
+
+  .speed-box {
+    background: #fff8e7;
+    border: 3px solid #93c47d;
+    border-radius: 16px;
+    padding: 8px 16px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #2e6b1f;
+    box-shadow: 0 4px 0 #6fa554;
+    transition: color 0.3s, border-color 0.3s;
+  }
+
+  .speed-box.fast { color: #b5790a; border-color: #f4b942; box-shadow: 0 4px 0 #e0a02c; }
+  .speed-box.frenzy { color: #b3231f; border-color: #e35353; box-shadow: 0 4px 0 #b53a3a; animation: pulse 0.6s infinite; }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+  }
+
+  .timer-wrap {
+    width: 100%;
+    max-width: 520px;
+    padding: 0 20px;
+    box-sizing: border-box;
+    z-index: 2;
+  }
+
+  .timer-bar-bg {
+    width: 100%;
+    height: 18px;
+    background: #ffffffaa;
+    border-radius: 12px;
+    border: 2px solid #ffffff;
+    overflow: hidden;
+  }
+
+  .timer-bar-fill {
+    height: 100%;
+    width: 100%;
+    border-radius: 12px;
+    background: #6fcf6f;
+    transition: width 1s linear, background-color 0.5s ease;
+  }
+
+  .timer-label {
+    text-align: center;
+    font-size: 14px;
+    color: #3a5a3a;
+    margin-top: 4px;
+    font-weight: bold;
+  }
+
+  .board {
+    margin: 28px auto;
+    display: grid;
+    grid-template-columns: repeat(3, 130px);
+    grid-template-rows: repeat(3, 130px);
+    gap: 18px;
+    z-index: 2;
+    position: relative;
+    background: rgba(255,255,255,0.35);
+    border-radius: 24px;
+    padding: 20px;
+    box-shadow: 0 6px 18px rgba(40,70,40,0.18), inset 0 0 0 3px rgba(255,255,255,0.5);
+  }
+
+  .start-screen .panel { max-width: 320px; }
+
+  .start-icon {
+    font-size: 44px;
+    margin-bottom: 4px;
+  }
+
+  .high-score-line {
+    font-size: 14px;
+    color: #7a4b00;
+    margin: 4px 0 14px;
+  }
+
+  .reaction-tag {
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    font-weight: bold;
+    color: #b3231f;
+    text-shadow: 1px 1px 0 #fff;
+    pointer-events: none;
+    z-index: 6;
+    animation: floatUp 0.8s ease-out forwards;
+  }
+
+  .countdown-num {
+    font-size: 64px;
+    font-weight: bold;
+    color: #4a7c3a;
+    text-shadow: 2px 2px 0 #fff;
+  }
+
+  @keyframes countdownPulse {
+    0% { transform: scale(0.4); opacity: 0; }
+    40% { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .countdown-num.pulse {
+    animation: countdownPulse 0.4s ease-out;
+  }
+
+  @keyframes wobble {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    25% { transform: rotate(-2.5deg) scale(1.02); }
+    50% { transform: rotate(0deg) scale(1); }
+    75% { transform: rotate(2.5deg) scale(1.02); }
+  }
+
+  .hole.anticipating .dirt-rim,
+  .hole.anticipating .hole-rim-light {
+    animation: wobble 0.35s ease-in-out infinite;
+  }
+
+  .hole {
+    position: relative;
+    width: 130px;
+    height: 130px;
+    cursor: pointer;
+  }
+
+  .dirt-rim {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 130px;
+    height: 90px;
+    background: radial-gradient(ellipse at center, #a86b3c 0%, #8a5527 60%, #6b3f1c 100%);
+    border-radius: 50% / 60%;
+    box-shadow: inset 0 -6px 0 #5a3416, 0 6px 4px rgba(0,0,0,0.15);
+    z-index: 1;
+  }
+
+  .hole-rim-light {
+    position: absolute;
+    bottom: 18px;
+    left: 12px;
+    width: 106px;
+    height: 70px;
+    background: radial-gradient(ellipse at center, #d9ad74 0%, #c08c52 55%, #a06b38 100%);
+    border-radius: 50%;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.2);
+    z-index: 2;
+  }
+
+  .hole-dark {
+    position: absolute;
+    bottom: 24px;
+    left: 22px;
+    width: 86px;
+    height: 52px;
+    background: radial-gradient(ellipse at center, #2b1a10 0%, #150c08 80%);
+    border-radius: 50%;
+    box-shadow: inset 0 4px 10px rgba(0,0,0,0.6);
+    z-index: 3;
+  }
+
+  .mole-wrap {
+    position: absolute;
+    bottom: 48px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 92px;
+    height: 96px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    overflow: hidden;
+    z-index: 4;
+  }
+
+  .mole {
+    font-size: 64px;
+    line-height: 1;
+    transform: translateY(100%);
+    transition: transform 0.16s cubic-bezier(.34,1.56,.64,1);
+    user-select: none;
+    -webkit-user-select: none;
+    filter: drop-shadow(0 4px 3px rgba(0,0,0,0.25));
+  }
+
+  .hole.up .mole {
+    transform: translateY(0px);
+  }
+
+  .hole.whacked .mole {
+    transform: translateY(100%) scale(0.7);
+    transition: transform 0.1s ease-in;
+  }
+
+  .score-pop {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    font-weight: bold;
+    font-size: 22px;
+    color: #ff7a3c;
+    text-shadow: 1px 1px 0 #fff;
+    pointer-events: none;
+    z-index: 5;
+    animation: floatUp 0.8s ease-out forwards;
+  }
+
+  @keyframes floatUp {
+    0% { opacity: 1; top: 20px; }
+    100% { opacity: 0; top: -40px; }
+  }
+
+  .particle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 4;
+    top: 50%;
+    left: 50%;
+  }
+
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(50, 90, 50, 0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    overflow: hidden;
+  }
+
+  .overlay.show { display: flex; }
+
+  .panel {
+    background: #fff8e7;
+    border: 4px solid #f4b942;
+    border-radius: 20px;
+    padding: 26px 36px 30px;
+    text-align: center;
+    box-shadow: 0 8px 0 #e0a02c;
+    position: relative;
+    z-index: 2;
+    min-width: 280px;
+  }
+
+  .panel h2 {
+    margin: 0 0 6px;
+    color: #4a7c3a;
+    font-size: 22px;
+  }
+
+  .final-score {
+    font-size: 52px;
+    font-weight: bold;
+    color: #ff7a3c;
+    text-shadow: 2px 2px 0 #fff;
+    margin: 6px 0;
+    animation: scoreIn 0.5s cubic-bezier(.34,1.56,.64,1);
+  }
+
+  @keyframes scoreIn {
+    0% { transform: scale(0); opacity: 0; }
+    60% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+
+  .stats-row {
+    display: flex;
+    gap: 18px;
+    justify-content: center;
+    margin: 14px 0;
+  }
+
+  .stat-box {
+    background: #fffdf3;
+    border: 2px solid #e0c98a;
+    border-radius: 10px;
+    padding: 8px 14px;
+    min-width: 84px;
+  }
+
+  .stat-box .num {
+    font-size: 20px;
+    font-weight: bold;
+    color: #7a4b00;
+  }
+
+  .stat-box .lab {
+    font-size: 11px;
+    color: #9a7a3a;
+  }
+
+  .high-score-badge {
+    display: inline-block;
+    background: #ffd23f;
+    color: #6b4a00;
+    font-weight: bold;
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    margin: 6px 0 10px;
+    border: 2px solid #e0a02c;
+    animation: badgePop 0.5s ease;
+  }
+
+  @keyframes badgePop {
+    0% { transform: scale(0) rotate(-10deg); }
+    70% { transform: scale(1.15) rotate(4deg); }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+
+  .btn {
+    background: #6fcf6f;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 28px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #4ca64c;
+    margin-top: 6px;
+  }
+
+  .btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #4ca64c;
+  }
+
+  .confetti {
+    position: absolute;
+    top: -20px;
+    width: 9px;
+    height: 14px;
+    z-index: 1;
+    animation: confettiFall linear forwards;
+  }
+
+  @keyframes confettiFall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(420px) rotate(540deg); opacity: 0.2; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+  <div class="hud">
+    <div class="score-box" id="scoreBox">Score: 0</div>
+    <div class="title">🌼 Garden Whack 🦋</div>
+    <div class="speed-box" id="speedBox">Easy</div>
+  </div>
+
+  <div class="timer-wrap">
+    <div class="timer-bar-bg"><div class="timer-bar-fill" id="timerFill"></div></div>
+    <div class="timer-label" id="timerLabel">30s</div>
+  </div>
+
+  <div class="board" id="board"></div>
+</div>
+
+<div class="overlay show" id="startOverlay">
+  <div class="panel start-screen" id="startPanel">
+    <div class="start-icon">🌼🦊🌻</div>
+    <h2>Garden Whack</h2>
+    <div class="high-score-line" id="startHighScore">High score: 0</div>
+    <button class="btn" id="startBtn">Start</button>
+  </div>
+  <div class="panel" id="countdownPanel" style="display:none;">
+    <div class="countdown-num" id="countdownNum">3</div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="panel">
+    <h2>Time's up!</h2>
+    <div id="highBadgeWrap"></div>
+    <div class="final-score" id="finalScoreNum">0</div>
+    <div class="stats-row">
+      <div class="stat-box"><div class="num" id="totalHits">0</div><div class="lab">total hits</div></div>
+      <div class="stat-box"><div class="num" id="hitsPerMin">0</div><div class="lab">hits / min</div></div>
+    </div>
+    <button class="btn" id="playAgain">Play again</button>
+  </div>
+</div>
+
+<script>
+  const MOLES = ['🐹', '🐻', '🐸', '🐵', '🐰', '🦊'];
+  const board = document.getElementById('board');
+  const scoreBox = document.getElementById('scoreBox');
+  const speedBox = document.getElementById('speedBox');
+  const timerFill = document.getElementById('timerFill');
+  const timerLabel = document.getElementById('timerLabel');
+  const overlay = document.getElementById('overlay');
+  const finalScoreNum = document.getElementById('finalScoreNum');
+  const totalHitsEl = document.getElementById('totalHits');
+  const hitsPerMinEl = document.getElementById('hitsPerMin');
+  const highBadgeWrap = document.getElementById('highBadgeWrap');
+  const playAgain = document.getElementById('playAgain');
+  const stage = document.getElementById('stage');
+  const startOverlay = document.getElementById('startOverlay');
+  const startBtn = document.getElementById('startBtn');
+  const startHighScore = document.getElementById('startHighScore');
+  const startPanel = document.getElementById('startPanel');
+  const countdownPanel = document.getElementById('countdownPanel');
+  const countdownNum = document.getElementById('countdownNum');
+
+  let score = 0;
+  let timeLeft = 30;
+  const TOTAL_TIME = 30;
+  let activeHoles = new Set();
+  let timerInterval = null;
+  let spawnTimeouts = [];
+  let running = false;
+  let highScore = parseInt(localStorage.getItem('gardenWhackHighScore') || '0', 10);
+
+  const holes = [];
+
+  // ---- audio ----
+  let audioCtx = null;
+  function getAudioCtx() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+  function playHitSound(isQuick) {
+    try {
+      const ctx = getAudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      const startFreq = isQuick ? 760 : 520;
+      const endFreq = isQuick ? 320 : 180;
+      osc.frequency.setValueAtTime(startFreq, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(endFreq, ctx.currentTime + 0.12);
+      gain.gain.setValueAtTime(isQuick ? 0.5 : 0.4, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.16);
+    } catch (e) { /* audio unsupported, ignore */ }
+  }
+
+  // ---- speed system: tied to score, not time ----
+  const PARTICLE_COLORS = ['#ff7a3c', '#ffd23f', '#6fcf6f', '#56c4e0', '#e35385', '#a26fe0'];
+
+  function lerp(a, b, t) { return a + (b - a) * t; }
+
+  // ---- adaptive difficulty: blends recent scoring PACE with total SCORE ----
+  const PACE_WINDOW_MS = 6000;   // rolling window for measuring recent speed
+  const PACE_REF = 1.3;          // hits/sec considered "fast" (1 every ~0.77s)
+  const SCORE_REF = 20;          // score considered "high" for the baseline ramp
+  let recentHitTimes = [];
+  let smoothedSkill = 0;
+
+  function currentPaceRatio(now) {
+    recentHitTimes = recentHitTimes.filter(t => now - t <= PACE_WINDOW_MS);
+    const pace = recentHitTimes.length / (PACE_WINDOW_MS / 1000);
+    return Math.max(0, Math.min(1, pace / PACE_REF));
+  }
+
+  function getDifficulty() {
+    const now = Date.now();
+    const paceRatio = currentPaceRatio(now);
+    const scoreRatio = Math.max(0, Math.min(1, score / SCORE_REF));
+    const rawSkill = 0.6 * paceRatio + 0.4 * scoreRatio;
+    smoothedSkill = smoothedSkill * 0.8 + rawSkill * 0.2;
+
+    const t = smoothedSkill;
+    const visibleMs = lerp(2500, 700, t);
+    const minGap = lerp(600, 250, t);
+    const maxGap = lerp(950, 480, t);
+    let label = 'Easy', cls = '';
+    if (t >= 0.65) { label = 'Frenzy'; cls = 'frenzy'; }
+    else if (t >= 0.32) { label = 'Fast'; cls = 'fast'; }
+    return { label, visibleMs, minGap, maxGap, cls, skill: t };
+  }
+
+  function updateSpeedLabel() {
+    const d = getDifficulty();
+    speedBox.textContent = d.label;
+    speedBox.className = 'speed-box' + (d.cls ? ' ' + d.cls : '');
+  }
+
+  function buildBoard() {
+    board.innerHTML = '';
+    holes.length = 0;
+    for (let i = 0; i < 9; i++) {
+      const hole = document.createElement('div');
+      hole.className = 'hole';
+      hole.dataset.index = i;
+
+      const rim = document.createElement('div');
+      rim.className = 'dirt-rim';
+
+      const rimLight = document.createElement('div');
+      rimLight.className = 'hole-rim-light';
+
+      const dark = document.createElement('div');
+      dark.className = 'hole-dark';
+
+      const moleWrap = document.createElement('div');
+      moleWrap.className = 'mole-wrap';
+
+      const mole = document.createElement('div');
+      mole.className = 'mole';
+      mole.textContent = MOLES[0];
+
+      moleWrap.appendChild(mole);
+      hole.appendChild(rim);
+      hole.appendChild(rimLight);
+      hole.appendChild(dark);
+      hole.appendChild(moleWrap);
+
+      hole.addEventListener('click', (e) => whack(hole, i, e));
+
+      board.appendChild(hole);
+      holes.push({ el: hole, mole, moleWrap, hideTimeout: null, spawnTime: 0 });
+    }
+  }
+
+  function randomEmptyHole() {
+    const emptyIndices = holes.map((h, i) => i).filter(i => !activeHoles.has(i));
+    if (emptyIndices.length === 0) return null;
+    return emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+  }
+
+  const ANTICIPATION_MS = 260;
+
+  function popUpMole(skipAnticipation) {
+    if (!running) return;
+    const idx = randomEmptyHole();
+    if (idx === null) { scheduleNextSpawn(); return; }
+
+    const holeData = holes[idx];
+    activeHoles.add(idx); // reserve this hole immediately so it can't be picked again
+
+    function reveal() {
+      if (!running) return;
+      holeData.el.classList.remove('anticipating');
+      const d = getDifficulty();
+      holeData.mole.textContent = MOLES[Math.floor(Math.random() * MOLES.length)];
+      holeData.el.classList.add('up');
+      holeData.spawnTime = Date.now();
+
+      holeData.hideTimeout = setTimeout(() => {
+        if (holeData.el.classList.contains('up')) {
+          holeData.el.classList.remove('up');
+          activeHoles.delete(idx);
+        }
+      }, d.visibleMs);
+    }
+
+    if (skipAnticipation) {
+      reveal();
+    } else {
+      holeData.el.classList.add('anticipating');
+      const t = setTimeout(reveal, ANTICIPATION_MS);
+      spawnTimeouts.push(t);
+    }
+
+    scheduleNextSpawn();
+  }
+
+  function scheduleNextSpawn() {
+    if (!running) return;
+    const d = getDifficulty();
+    const delay = d.minGap + Math.random() * (d.maxGap - d.minGap);
+    const t = setTimeout(popUpMole, delay);
+    spawnTimeouts.push(t);
+  }
+
+  function spawnParticles(hole, count) {
+    count = count || 10;
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const color = PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)];
+      p.style.background = color;
+      const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+      const dist = 40 + Math.random() * 30;
+      const dx = Math.cos(angle) * dist;
+      const dy = Math.sin(angle) * dist;
+      p.style.setProperty('--dx', dx + 'px');
+      p.style.setProperty('--dy', dy + 'px');
+      p.animate([
+        { transform: 'translate(-50%,-50%) scale(1)', opacity: 1 },
+        { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0.3)`, opacity: 0 }
+      ], { duration: 500 + Math.random() * 200, easing: 'ease-out' });
+      hole.appendChild(p);
+      setTimeout(() => p.remove(), 750);
+    }
+  }
+
+  function shakeScreen() {
+    stage.classList.remove('shake');
+    void stage.offsetWidth;
+    stage.classList.add('shake');
+    setTimeout(() => stage.classList.remove('shake'), 260);
+  }
+
+  let totalHits = 0;
+  let gameStartTime = 0;
+
+  function whack(hole, idx, evt) {
+    if (!running) return;
+    if (!hole.classList.contains('up')) return;
+
+    clearTimeout(holes[idx].hideTimeout);
+    hole.classList.remove('up');
+    hole.classList.add('whacked');
+    activeHoles.delete(idx);
+
+    const reactionMs = Date.now() - holes[idx].spawnTime;
+    const isQuick = reactionMs < 400;
+    const gained = isQuick ? 2 : 1;
+    score += gained;
+    totalHits += 1;
+    recentHitTimes.push(Date.now());
+    scoreBox.textContent = 'Score: ' + score;
+    updateSpeedLabel();
+
+    spawnParticles(hole, isQuick ? 18 : 10);
+    shakeScreen();
+    playHitSound(isQuick);
+
+    if (isQuick) {
+      const tag = document.createElement('div');
+      tag.className = 'reaction-tag';
+      tag.textContent = 'Quick!';
+      hole.appendChild(tag);
+      setTimeout(() => tag.remove(), 800);
+    }
+
+    const pop = document.createElement('div');
+    pop.className = 'score-pop';
+    pop.textContent = '+' + gained;
+    hole.appendChild(pop);
+    setTimeout(() => pop.remove(), 800);
+
+    setTimeout(() => hole.classList.remove('whacked'), 140);
+  }
+
+  function updateTimerBar() {
+    const pct = (timeLeft / TOTAL_TIME) * 100;
+    timerFill.style.width = pct + '%';
+    timerLabel.textContent = timeLeft + 's';
+    if (pct > 50) timerFill.style.background = '#6fcf6f';
+    else if (pct > 20) timerFill.style.background = '#f4c542';
+    else timerFill.style.background = '#e35353';
+  }
+
+  function launchConfetti() {
+    const panel = document.querySelector('.panel');
+    const colors = ['#ff7a3c', '#ffd23f', '#6fcf6f', '#56c4e0', '#e35385', '#a26fe0'];
+    for (let i = 0; i < 36; i++) {
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.style.left = Math.random() * 100 + '%';
+      c.style.background = colors[Math.floor(Math.random() * colors.length)];
+      c.style.animationDuration = (1.2 + Math.random() * 1.2) + 's';
+      c.style.animationDelay = (Math.random() * 0.4) + 's';
+      overlay.appendChild(c);
+      setTimeout(() => c.remove(), 3200);
+    }
+  }
+
+  function startGame() {
+    score = 0;
+    totalHits = 0;
+    timeLeft = TOTAL_TIME;
+    recentHitTimes = [];
+    smoothedSkill = 0;
+    scoreBox.textContent = 'Score: 0';
+    updateSpeedLabel();
+    updateTimerBar();
+    overlay.classList.remove('show');
+    overlay.querySelectorAll('.confetti').forEach(c => c.remove());
+    activeHoles.clear();
+    spawnTimeouts.forEach(t => clearTimeout(t));
+    spawnTimeouts = [];
+
+    holes.forEach(h => {
+      clearTimeout(h.hideTimeout);
+      h.el.classList.remove('up', 'whacked', 'anticipating');
+    });
+
+    running = true;
+    gameStartTime = Date.now();
+
+    timerInterval = setInterval(() => {
+      timeLeft -= 1;
+      updateTimerBar();
+      updateSpeedLabel();
+      if (timeLeft <= 0) endGame();
+    }, 1000);
+
+    // instant start: first mole appears with zero delay, no anticipation wobble
+    popUpMole(true);
+  }
+
+  function endGame() {
+    running = false;
+    clearInterval(timerInterval);
+    spawnTimeouts.forEach(t => clearTimeout(t));
+    holes.forEach(h => {
+      clearTimeout(h.hideTimeout);
+      h.el.classList.remove('up', 'anticipating');
+    });
+
+    const elapsedMin = Math.max((Date.now() - gameStartTime) / 60000, 1 / 60);
+    const hpm = Math.round(totalHits / elapsedMin);
+
+    finalScoreNum.textContent = '0';
+    totalHitsEl.textContent = totalHits;
+    hitsPerMinEl.textContent = hpm;
+
+    highBadgeWrap.innerHTML = '';
+    const isNewHigh = score > highScore;
+    if (isNewHigh) {
+      highScore = score;
+      localStorage.setItem('gardenWhackHighScore', String(highScore));
+      const badge = document.createElement('div');
+      badge.className = 'high-score-badge';
+      badge.textContent = '🏆 New high score!';
+      highBadgeWrap.appendChild(badge);
+    }
+
+    overlay.classList.add('show');
+    launchConfetti();
+
+    // animate final score count-up
+    let display = 0;
+    const step = Math.max(1, Math.round(score / 20));
+    const countUp = setInterval(() => {
+      display = Math.min(score, display + step);
+      finalScoreNum.textContent = display;
+      if (display >= score) clearInterval(countUp);
+    }, 30);
+  }
+
+  function playTickSound(pitch) {
+    try {
+      const ctx = getAudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(pitch, ctx.currentTime);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.2);
+    } catch (e) { /* audio unsupported, ignore */ }
+  }
+
+  function runCountdown() {
+    startPanel.style.display = 'none';
+    countdownPanel.style.display = 'block';
+    let n = 3;
+    countdownNum.textContent = n;
+    countdownNum.classList.remove('pulse');
+    void countdownNum.offsetWidth;
+    countdownNum.classList.add('pulse');
+    playTickSound(440);
+
+    const tick = setInterval(() => {
+      n -= 1;
+      if (n <= 0) {
+        clearInterval(tick);
+        startOverlay.classList.remove('show');
+        countdownPanel.style.display = 'none';
+        startPanel.style.display = '';
+        startGame();
+        return;
+      }
+      countdownNum.textContent = n;
+      countdownNum.classList.remove('pulse');
+      void countdownNum.offsetWidth;
+      countdownNum.classList.add('pulse');
+      playTickSound(440 + (3 - n) * 60);
+    }, 600);
+  }
+
+  playAgain.addEventListener('click', () => {
+    getAudioCtx();
+    startGame();
+  });
+
+  startBtn.addEventListener('click', () => {
+    getAudioCtx();
+    runCountdown();
+  });
+
+  startHighScore.textContent = 'High score: ' + highScore;
+  buildBoard();
+</script>
+
+</body>
+</html>
