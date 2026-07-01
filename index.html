@@ -345,12 +345,12 @@
   /* ─── ABOUT ─── */
   .about-grid {
     display: grid;
-    grid-template-columns: 320px 1fr;
+    grid-template-columns: 380px 1fr;
     gap: 64px; align-items: start;
   }
 
   .about-avatar {
-    width: 320px; height: 320px;
+    width: 380px; height: 380px;
     border-radius: 16px;
     background: linear-gradient(135deg, var(--pink-xl) 0%, var(--yellow) 100%);
     display: flex; align-items: center; justify-content: center;
@@ -360,7 +360,7 @@
   }
   .about-avatar img {
     width: 100%; height: 100%;
-    object-fit: cover; display: block;
+    object-fit: contain; display: block;
   }
 
   .about-body p {
