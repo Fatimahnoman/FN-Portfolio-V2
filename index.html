@@ -2,881 +2,1825 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Whimsical Garden Whack-a-Mole</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fatimah Noman — Web Game Developer · AI Prompting Expert · Certified Agentic AI Engineer</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>FN</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:         #fafafa;
+    --bg-2:       #f5f5f5;
+    --bg-3:       #f0f0f0;
+    --pink-xl:    #fdf2f8;
+    --pink-md:    #fb7185;
+    --pink:       #f43f5e;
+    --pink-dk:    #e11d48;
+    --pink-xdk:   #be123c;
+    --yellow:     var(--pink);
+    --yellow-dk:  var(--pink-dk);
+    --ink:        #1c1c1e;
+    --muted:      #737373;
+    --border:     #e5e7eb;
+  }
+
+  html { scroll-behavior: smooth; }
+
   body {
-    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16.5px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ─── SPLASH ─── */
+  #splash { position:fixed; inset:0; z-index:9999; background:var(--bg); display:flex; align-items:center; justify-content:center; flex-direction:column; text-align:center; padding:40px; transition:opacity .6s,visibility .6s; }
+  #splash.hidden { opacity:0; visibility:hidden; pointer-events:none; }
+  .splash-badge { font-size:11px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:var(--pink-md); margin-bottom:20px; }
+  .splash-name { font-family:'Cormorant Garamond',serif; font-size:clamp(48px,8vw,80px); font-weight:700; letter-spacing:-2px; color:var(--ink); line-height:1.05; margin-bottom:12px; }
+  .splash-name em { color:var(--pink); font-style:italic; }
+  .splash-sub { font-size:14px; font-weight:300; color:var(--muted); max-width:440px; line-height:1.7; margin-bottom:40px; }
+  .splash-btn { padding:16px 40px; background:var(--pink); color:#fff; border:none; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer; letter-spacing:.4px; transition:background .2s,transform .15s; display:inline-flex; align-items:center; gap:10px; }
+  .splash-btn:hover { background:var(--pink-dk); transform:translateY(-2px); }
+  .splash-btn .arrow { transition:transform .2s; }
+  .splash-btn:hover .arrow { transform:translateX(4px); }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 56px;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-brand {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px; font-weight: 600;
+    color: var(--ink);
+    letter-spacing: 0.3px;
+    text-decoration: none;
+  }
+
+  .nav-links { display: flex; gap: 32px; list-style: none; }
+
+  .nav-links a {
+    font-size: 13.5px; font-weight: 500; letter-spacing: 0.4px;
+    color: var(--muted); text-decoration: none;
+    text-transform: uppercase;
+    transition: color 0.2s;
+    position: relative;
+  }
+
+  .nav-links a::after {
+    content: '';
+    position: absolute; bottom: -4px; left: 0; right: 0;
+    height: 2px; background: var(--pink);
+    border-radius: 2px;
+    transform: scaleX(0);
+    transition: transform 0.2s;
+  }
+
+  .nav-links a:hover::after, .nav-links a.active::after { transform: scaleX(1); }
+
+  .nav-links a:hover, .nav-links a.active { color: var(--pink); }
+
+  /* ─── HERO ─── */
+  #hero {
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
-    background: linear-gradient(180deg, #cdeefd 0%, #e6f7ff 35%, #d8f3dc 100%);
-    overflow-x: hidden;
+    background: linear-gradient(160deg, var(--bg) 0%, var(--bg-2) 30%, #fce7f3 60%, var(--pink-xl) 100%);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 120px 40px 80px;
+    text-align: center;
     position: relative;
-  }
-
-  .stage {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    transform-origin: center center;
-  }
-
-  .stage.shake {
-    animation: shake 0.25s ease;
-  }
-
-  @keyframes shake {
-    0% { transform: translate(0,0); }
-    20% { transform: translate(-6px,3px); }
-    40% { transform: translate(5px,-3px); }
-    60% { transform: translate(-4px,2px); }
-    80% { transform: translate(3px,-1px); }
-    100% { transform: translate(0,0); }
-  }
-
-  .hud {
-    width: 100%;
-    max-width: 520px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 20px 4px;
-    box-sizing: border-box;
-    z-index: 2;
-  }
-
-  .score-box {
-    background: #fff8e7;
-    border: 3px solid #f4b942;
-    border-radius: 16px;
-    padding: 8px 18px;
-    font-size: 20px;
-    font-weight: bold;
-    color: #7a4b00;
-    box-shadow: 0 4px 0 #e0a02c;
-  }
-
-  .title {
-    font-size: 22px;
-    font-weight: bold;
-    color: #4a7c3a;
-    text-shadow: 1px 1px 0 #ffffff;
-    margin: 6px 0 0;
-  }
-
-  .speed-box {
-    background: #fff8e7;
-    border: 3px solid #93c47d;
-    border-radius: 16px;
-    padding: 8px 16px;
-    font-size: 16px;
-    font-weight: bold;
-    color: #2e6b1f;
-    box-shadow: 0 4px 0 #6fa554;
-    transition: color 0.3s, border-color 0.3s;
-  }
-
-  .speed-box.fast { color: #b5790a; border-color: #f4b942; box-shadow: 0 4px 0 #e0a02c; }
-  .speed-box.frenzy { color: #b3231f; border-color: #e35353; box-shadow: 0 4px 0 #b53a3a; animation: pulse 0.6s infinite; }
-
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.06); }
-  }
-
-  .timer-wrap {
-    width: 100%;
-    max-width: 520px;
-    padding: 0 20px;
-    box-sizing: border-box;
-    z-index: 2;
-  }
-
-  .timer-bar-bg {
-    width: 100%;
-    height: 18px;
-    background: #ffffffaa;
-    border-radius: 12px;
-    border: 2px solid #ffffff;
     overflow: hidden;
   }
 
-  .timer-bar-fill {
-    height: 100%;
-    width: 100%;
-    border-radius: 12px;
-    background: #6fcf6f;
-    transition: width 1s linear, background-color 0.5s ease;
+  #hero::before {
+    content: '';
+    position: absolute; top: -20%; right: -10%;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(244,63,94,0.06) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
   }
 
-  .timer-label {
-    text-align: center;
-    font-size: 14px;
-    color: #3a5a3a;
-    margin-top: 4px;
-    font-weight: bold;
+  #hero::after {
+    content: '';
+    position: absolute; bottom: -20%; left: -10%;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(251,113,133,0.05) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
   }
 
-  .board {
-    margin: 28px auto;
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 500;
+    letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--pink-dk);
+    background: var(--pink-xl);
+    border: 1px solid var(--pink-md);
+    border-radius: 99px;
+    padding: 6px 20px;
+    margin-bottom: 32px;
+  }
+
+  .hero-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(60px, 10vw, 110px);
+    font-weight: 700;
+    line-height: 1.0;
+    letter-spacing: -2px;
+    color: var(--ink);
+    margin-bottom: 20px;
+  }
+
+  .hero-name em {
+    font-style: italic;
+    color: var(--pink);
+  }
+
+  .hero-divider {
+    width: 60px; height: 2px;
+    background: var(--pink);
+    margin: 0 auto 20px;
+    border-radius: 2px;
+  }
+
+  .hero-linkedin { margin-bottom: 14px; }
+  .hero-linkedin a {
+    font-size: 13px; font-weight: 500;
+    color: var(--pink-md); text-decoration: none;
+    transition: color 0.2s;
+  }
+  .hero-linkedin a:hover { color: var(--pink); }
+
+  .hero-tagline {
+    display: flex; align-items: center; justify-content: center;
+    flex-wrap: wrap; gap: 10px 18px;
+    font-size: 15px; font-weight: 500;
+    letter-spacing: 0.8px;
+    color: var(--pink-dk);
+    margin-bottom: 28px;
+  }
+
+  .hero-tagline .dot { color: var(--yellow); opacity: 0.6; }
+
+  .hero-desc {
+    max-width: 560px;
+    font-size: 17px; font-weight: 300;
+    color: var(--ink);
+    line-height: 1.75;
+    margin: 0 auto 40px;
+    opacity: 0.9;
+  }
+
+  .hero-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+  .btn-solid {
+    padding: 13px 30px;
+    background: var(--pink);
+    color: #fff; border: none;
+    border-radius: 8px; font-size: 14px;
+    font-weight: 600; letter-spacing: 0.4px;
+    cursor: pointer; text-decoration: none;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 20px rgba(244,63,94,0.3);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-solid:hover { background: var(--pink-dk); transform: translateY(-2px); box-shadow: 0 6px 24px rgba(244,63,94,0.35); }
+  .btn-solid:active { transform: scale(0.97); }
+
+  .btn-ghost {
+    padding: 13px 30px;
+    background: var(--pink-xl);
+    color: var(--ink);
+    border: 1.5px solid var(--pink-md);
+    border-radius: 8px; font-size: 14px;
+    font-weight: 500; cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-ghost:hover { background: var(--bg-3); transform: translateY(-2px); }
+  .btn-ghost:active { transform: scale(0.97); }
+
+  .hero-scroll {
+    position: absolute; bottom: 32px; left: 50%;
+    translate: -50% 0;
+    font-size: 12px; color: var(--muted);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    letter-spacing: 1px; text-transform: uppercase;
+    animation: scrollBounce 2.5s ease-in-out infinite;
+  }
+
+  .hero-scroll::after {
+    content: '';
+    display: block; width: 2px; height: 32px;
+    background: var(--muted);
+    border-radius: 2px;
+    opacity: 0.5;
+  }
+
+  @keyframes scrollBounce {
+    0%, 100% { translate: -50% 0; }
+    50% { translate: -50% 6px; }
+  }
+
+  /* ─── STRENGTH STRIP ─── */
+  .strength-strip {
     display: grid;
-    grid-template-columns: repeat(3, 130px);
-    grid-template-rows: repeat(3, 130px);
-    gap: 18px;
-    z-index: 2;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    max-width: 1100px;
+    margin: -60px auto 0;
+    padding: 0 24px;
     position: relative;
-    background: rgba(255,255,255,0.35);
-    border-radius: 24px;
-    padding: 20px;
-    box-shadow: 0 6px 18px rgba(40,70,40,0.18), inset 0 0 0 3px rgba(255,255,255,0.5);
-  }
-
-  .start-screen .panel { max-width: 320px; }
-
-  .start-icon {
-    font-size: 44px;
-    margin-bottom: 4px;
-  }
-
-  .high-score-line {
-    font-size: 14px;
-    color: #7a4b00;
-    margin: 4px 0 14px;
-  }
-
-  .reaction-tag {
-    position: absolute;
-    top: -18px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 11px;
-    font-weight: bold;
-    color: #b3231f;
-    text-shadow: 1px 1px 0 #fff;
-    pointer-events: none;
-    z-index: 6;
-    animation: floatUp 0.8s ease-out forwards;
-  }
-
-  .countdown-num {
-    font-size: 64px;
-    font-weight: bold;
-    color: #4a7c3a;
-    text-shadow: 2px 2px 0 #fff;
-  }
-
-  @keyframes countdownPulse {
-    0% { transform: scale(0.4); opacity: 0; }
-    40% { transform: scale(1.15); opacity: 1; }
-    100% { transform: scale(1); opacity: 1; }
-  }
-
-  .countdown-num.pulse {
-    animation: countdownPulse 0.4s ease-out;
-  }
-
-  @keyframes wobble {
-    0%, 100% { transform: rotate(0deg) scale(1); }
-    25% { transform: rotate(-2.5deg) scale(1.02); }
-    50% { transform: rotate(0deg) scale(1); }
-    75% { transform: rotate(2.5deg) scale(1.02); }
-  }
-
-  .hole.anticipating .dirt-rim,
-  .hole.anticipating .hole-rim-light {
-    animation: wobble 0.35s ease-in-out infinite;
-  }
-
-  .hole {
-    position: relative;
-    width: 130px;
-    height: 130px;
-    cursor: pointer;
-  }
-
-  .dirt-rim {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 130px;
-    height: 90px;
-    background: radial-gradient(ellipse at center, #a86b3c 0%, #8a5527 60%, #6b3f1c 100%);
-    border-radius: 50% / 60%;
-    box-shadow: inset 0 -6px 0 #5a3416, 0 6px 4px rgba(0,0,0,0.15);
-    z-index: 1;
-  }
-
-  .hole-rim-light {
-    position: absolute;
-    bottom: 18px;
-    left: 12px;
-    width: 106px;
-    height: 70px;
-    background: radial-gradient(ellipse at center, #d9ad74 0%, #c08c52 55%, #a06b38 100%);
-    border-radius: 50%;
-    box-shadow: 0 2px 3px rgba(0,0,0,0.2);
-    z-index: 2;
-  }
-
-  .hole-dark {
-    position: absolute;
-    bottom: 24px;
-    left: 22px;
-    width: 86px;
-    height: 52px;
-    background: radial-gradient(ellipse at center, #2b1a10 0%, #150c08 80%);
-    border-radius: 50%;
-    box-shadow: inset 0 4px 10px rgba(0,0,0,0.6);
-    z-index: 3;
-  }
-
-  .mole-wrap {
-    position: absolute;
-    bottom: 48px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 92px;
-    height: 96px;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    overflow: hidden;
-    z-index: 4;
-  }
-
-  .mole {
-    font-size: 64px;
-    line-height: 1;
-    transform: translateY(100%);
-    transition: transform 0.16s cubic-bezier(.34,1.56,.64,1);
-    user-select: none;
-    -webkit-user-select: none;
-    filter: drop-shadow(0 4px 3px rgba(0,0,0,0.25));
-  }
-
-  .hole.up .mole {
-    transform: translateY(0px);
-  }
-
-  .hole.whacked .mole {
-    transform: translateY(100%) scale(0.7);
-    transition: transform 0.1s ease-in;
-  }
-
-  .score-pop {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    font-weight: bold;
-    font-size: 22px;
-    color: #ff7a3c;
-    text-shadow: 1px 1px 0 #fff;
-    pointer-events: none;
-    z-index: 5;
-    animation: floatUp 0.8s ease-out forwards;
-  }
-
-  @keyframes floatUp {
-    0% { opacity: 1; top: 20px; }
-    100% { opacity: 0; top: -40px; }
-  }
-
-  .particle {
-    position: absolute;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 4;
-    top: 50%;
-    left: 50%;
-  }
-
-  .overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(50, 90, 50, 0.6);
-    display: none;
-    align-items: center;
-    justify-content: center;
     z-index: 10;
+  }
+
+  .strength-card {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 20px 24px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+  }
+
+  .strength-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 36px rgba(244,63,94,0.1);
+    border-color: var(--pink-md);
+  }
+
+  .strength-icon { font-size: 34px; margin-bottom: 12px; }
+
+  .strength-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px; font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 8px;
+    line-height: 1.2;
+  }
+
+  .strength-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.65;
+  }
+
+  .strength-desc a {
+    color: var(--pink);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .strength-desc a:hover { text-decoration: underline; }
+
+  /* ─── SECTION BASE ─── */
+  .sec {
+    padding: 88px 56px;
+    max-width: 1060px;
+    margin: 0 auto;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sec-alt {
+    background: var(--bg-2);
+    max-width: 100%;
+    padding: 0;
+    position: relative;
+  }
+
+  .sec-alt::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: radial-gradient(var(--border) 1px, transparent 1px);
+    background-size: 32px 32px;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .sec-alt .sec { padding: 88px 56px; }
+
+  .sec-label {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 3px; text-transform: uppercase;
+    color: var(--pink);
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .sec-label::before {
+    content: '';
+    display: inline-block;
+    width: 24px; height: 2px;
+    background: var(--yellow);
+    border-radius: 2px;
+  }
+
+  .sec-heading {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(32px, 4vw, 50px);
+    font-weight: 700; line-height: 1.1;
+    letter-spacing: -1px;
+    color: var(--ink);
+    margin-bottom: 14px;
+  }
+
+  .sec-sub {
+    font-size: 16px; font-weight: 300;
+    color: var(--muted); max-width: 520px;
+    line-height: 1.7; margin-bottom: 52px;
+  }
+
+  /* ─── ABOUT ─── */
+  .about-grid {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 64px; align-items: start;
+  }
+
+  .about-avatar {
+    width: 200px; height: 200px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--pink-xl) 0%, var(--yellow) 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 80px;
+    border: 3px solid var(--pink-xl);
+    flex-shrink: 0; overflow: hidden;
+  }
+  .about-avatar img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+  }
+
+  .about-body p {
+    font-size: 16px; font-weight: 300;
+    color: var(--ink);     line-height: 1.85;
+    margin-bottom: 18px;
+    opacity: 0.95;
+  }
+
+  .about-body p strong { color: var(--pink-dk); font-weight: 600; }
+
+  .about-tags {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-top: 24px;
+  }
+
+  .tag {
+    font-size: 12px; font-weight: 500;
+    letter-spacing: 0.5px;
+    background: var(--pink-xl);
+    color: var(--ink);
+    border: 1px solid var(--pink-md);
+    border-radius: 6px;
+    padding: 5px 14px;
+  }
+
+  /* ─── STATS ─── */
+  .stats-row {
+    display: flex; gap: 24px;
+    margin-top: 40px;
+    flex-wrap: wrap;
+  }
+
+  .stat-item {
+    display: flex; align-items: center; gap: 12px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 20px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .stat-item:hover {
+    border-color: var(--pink-md);
+    box-shadow: 0 4px 16px rgba(244,63,94,0.08);
+  }
+  .stat-item:active { transform: scale(0.97); }
+
+  .stat-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px; font-weight: 700;
+    color: var(--pink);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 12.5px; color: var(--muted);
+    line-height: 1.3;
+  }
+
+  .avail-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-left: auto;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--pink-dk); background: var(--pink-xl);
+    border: 1px solid var(--pink-md);
+    border-radius: 99px; padding: 6px 16px;
+  }
+
+  .about-milestones {
+    display: flex; flex-direction: column; gap: 8px;
+    margin-top: 20px;
+    padding: 16px 20px;
+    background: rgba(244,63,94,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+
+  .milestone {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; font-weight: 400;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  .milestone span { font-size: 16px; flex-shrink: 0; }
+
+  /* ─── EDUCATION ─── */
+  .edu-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .edu-card {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--pink);
+    border-radius: 12px;
+    padding: 28px 28px 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: box-shadow 0.3s, transform 0.3s;
+  }
+
+  .edu-card:active { transform: scale(0.98); }
+
+  .edu-card:hover {
+    box-shadow: 0 8px 28px rgba(244,63,94,0.08);
+    transform: translateY(-3px);
+    border-color: var(--pink-md);
+  }
+
+  .edu-icon { font-size: 28px; margin-bottom: 14px; }
+
+  .edu-level {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--pink); margin-bottom: 6px;
+  }
+
+  .edu-school {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px; font-weight: 700;
+    color: var(--ink); margin-bottom: 6px;
+    line-height: 1.25;
+  }
+
+  .edu-detail {
+    font-size: 13.5px; color: var(--muted);
+    font-weight: 300;
+  }
+
+  /* ─── SKILLS ─── */
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+
+  .skill-card {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--yellow);
+    border-radius: 10px;
+    padding: 22px 22px 18px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: box-shadow 0.25s, border-color 0.25s;
+  }
+
+  .skill-card:hover {
+    box-shadow: 0 6px 24px rgba(244,63,94,0.06);
+    border-color: var(--pink-md);
+  }
+
+  .skill-icon { font-size: 22px; margin-bottom: 10px; }
+
+  .skill-name {
+    font-size: 14px; font-weight: 600;
+    color: var(--ink); margin-bottom: 5px;
+  }
+
+  .skill-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* ─── PROJECTS ─── */
+  .proj-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .proj-card {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: box-shadow 0.25s, transform 0.25s;
+    cursor: default;
+  }
+
+  .proj-card:active { transform: scale(0.98); }
+
+  .proj-card:hover {
+    box-shadow: 0 10px 32px rgba(244,63,94,0.08);
+    transform: translateY(-4px);
+  }
+
+  .proj-banner {
+    height: 140px; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 48px;
+  }
+  .proj-banner img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+  }
+
+  .banner-1 { background: linear-gradient(135deg, #fdf2f8, #fbcfe8); }
+  .banner-2 { background: linear-gradient(135deg, #fce7f3, #fbcfe8); }
+  .banner-3 { background: linear-gradient(135deg, #fce7f3, #fbcfe8); }
+
+  .proj-body { padding: 22px 22px 20px; }
+
+  .proj-tag {
+    display: inline-block;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--pink-md); background: var(--pink-xl);
+    border-radius: 4px; padding: 3px 9px;
+    margin-bottom: 10px;
+  }
+
+  .proj-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px; font-weight: 700;
+    color: var(--ink); margin-bottom: 8px;
+  }
+
+  .proj-desc { font-size: 14px; color: var(--muted); line-height: 1.65; }
+
+  .proj-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-top: 14px; font-size: 13px; font-weight: 600;
+    color: var(--pink); text-decoration: none;
+    border-bottom: 1.5px solid var(--pink-xl);
+    padding-bottom: 1px;
+    transition: border-color 0.2s;
+  }
+
+  .proj-link:hover { border-color: var(--pink); }
+
+  .proj-stack {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-top: 12px;
+  }
+
+  .proj-stack span {
+    font-size: 10.5px; font-weight: 600;
+    letter-spacing: 0.8px; text-transform: uppercase;
+    color: var(--muted);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 8px;
+  }
+
+  .proj-features {
+    display: flex; flex-wrap: wrap; gap: 5px;
+    margin-top: 10px;
+  }
+
+  .proj-features span {
+    font-size: 11px; font-weight: 500;
+    color: var(--pink-dk);
+    background: rgba(244,63,94,0.08);
+    border-radius: 4px;
+    padding: 2px 8px;
+  }
+
+  .proj-banner {
+    position: relative;
+  }
+
+  .proj-banner::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(244,63,94,0), rgba(244,63,94,0.08));
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+
+  .proj-card:hover .proj-banner::after {
+    opacity: 1;
+  }
+
+  .game-badge {
+    display: inline-block;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: #fff; background: var(--pink);
+    border-radius: 4px; padding: 3px 9px;
+    margin-left: 6px;
+  }
+
+  /* ─── TESTIMONIALS ─── */
+  .testimonial-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px; margin-top: 48px;
     overflow: hidden;
   }
 
-  .overlay.show { display: flex; }
-
-  .panel {
-    background: #fff8e7;
-    border: 4px solid #f4b942;
-    border-radius: 20px;
-    padding: 26px 36px 30px;
-    text-align: center;
-    box-shadow: 0 8px 0 #e0a02c;
-    position: relative;
-    z-index: 2;
-    min-width: 280px;
+  .testimonial-card {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 28px 26px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: box-shadow 0.2s, transform 0.2s;
   }
 
-  .panel h2 {
-    margin: 0 0 6px;
-    color: #4a7c3a;
-    font-size: 22px;
+  .testimonial-card.in {
+    animation: fadeUp 0.5s ease forwards;
   }
 
-  .final-score {
-    font-size: 52px;
-    font-weight: bold;
-    color: #ff7a3c;
-    text-shadow: 2px 2px 0 #fff;
-    margin: 6px 0;
-    animation: scoreIn 0.5s cubic-bezier(.34,1.56,.64,1);
+  .testimonial-card:nth-child(2).in { animation-delay: 0.1s; }
+  .testimonial-card:nth-child(3).in { animation-delay: 0.2s; }
+  .testimonial-card:nth-child(4).in { animation-delay: 0.3s; }
+
+  .testimonial-card:hover {
+    box-shadow: 0 8px 28px rgba(244,63,94,0.06);
+    transform: translateY(-3px);
   }
 
-  @keyframes scoreIn {
-    0% { transform: scale(0); opacity: 0; }
-    60% { transform: scale(1.2); opacity: 1; }
-    100% { transform: scale(1); }
+  @keyframes fadeUp {
+    0% { opacity: 0; translate: 0 20px; }
+    100% { opacity: 1; translate: 0 0; }
   }
 
-  .stats-row {
-    display: flex;
-    gap: 18px;
-    justify-content: center;
-    margin: 14px 0;
+  .testimonial-text {
+    font-size: 15px;
+    color: var(--ink); line-height: 1.75;
+    margin-bottom: 16px;
+    opacity: 0.85;
   }
 
-  .stat-box {
-    background: #fffdf3;
-    border: 2px solid #e0c98a;
-    border-radius: 10px;
-    padding: 8px 14px;
-    min-width: 84px;
+  .testimonial-text::before { content: '"'; }
+  .testimonial-text::after  { content: '"'; }
+
+  .testimonial-author {
+    display: flex; align-items: center; gap: 10px;
   }
 
-  .stat-box .num {
-    font-size: 20px;
-    font-weight: bold;
-    color: #7a4b00;
+  .testimonial-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--pink-xl), var(--yellow));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: var(--pink-dk);
+    flex-shrink: 0;
   }
 
-  .stat-box .lab {
-    font-size: 11px;
-    color: #9a7a3a;
+  .testimonial-name {
+    font-size: 13px; font-weight: 600; color: var(--ink);
   }
 
-  .high-score-badge {
-    display: inline-block;
-    background: #ffd23f;
-    color: #6b4a00;
-    font-weight: bold;
-    font-size: 13px;
-    padding: 6px 14px;
-    border-radius: 20px;
-    margin: 6px 0 10px;
-    border: 2px solid #e0a02c;
-    animation: badgePop 0.5s ease;
+  .testimonial-role {
+    font-size: 11px; color: var(--muted);
   }
 
-  @keyframes badgePop {
-    0% { transform: scale(0) rotate(-10deg); }
-    70% { transform: scale(1.15) rotate(4deg); }
-    100% { transform: scale(1) rotate(0deg); }
+  /* ─── HOBBIES ─── */
+  .hobbies-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
   }
 
-  .btn {
-    background: #6fcf6f;
-    color: #fff;
-    border: none;
+  .hobby-card {
+    background: #ffffff;
+    border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 12px 28px;
-    font-size: 16px;
-    font-weight: bold;
+    padding: 28px 20px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: border-color 0.25s, transform 0.25s;
+  }
+
+  .hobby-card:hover {
+    border-color: var(--pink);
+    transform: translateY(-3px);
+  }
+
+  .hobby-icon { font-size: 34px; margin-bottom: 12px; }
+
+  .hobby-name {
+    font-size: 14px; font-weight: 600;
+    color: var(--ink); margin-bottom: 5px;
+  }
+
+  .hobby-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* ─── CONTACT ─── */
+  #contact-section {
+    background: linear-gradient(135deg, var(--pink-xl), var(--pink-md), var(--pink-xl));
+    padding: 96px 56px;
+    text-align: center;
+    position: relative;
+  }
+
+  #contact-section::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 50%, rgba(244,63,94,0.04), transparent 70%);
+    pointer-events: none;
+  }
+
+  #contact-section .sec-label { color: var(--pink-md); justify-content: center; }
+  #contact-section .sec-label::before { background: var(--pink-md); }
+
+  #contact-section .sec-heading {
+    color: var(--ink);
+  }
+
+  #contact-section .sec-sub {
+    color: #4a1623;
+    margin-left: auto; margin-right: auto;
+  }
+
+  .contact-links {
+    display: flex; gap: 14px;
+    justify-content: center; flex-wrap: wrap;
+  }
+
+  .contact-link {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 22px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--ink);
+    text-decoration: none;
+    font-size: 14px; font-weight: 500;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .contact-link:hover { border-color: var(--pink); box-shadow: 0 4px 16px rgba(244,63,94,0.08); }
+
+  /* ─── BACK TO TOP ─── */
+  #back-top {
+    position: fixed; bottom: 32px; right: 32px; z-index: 99;
+    width: 44px; height: 44px;
+    background: var(--pink-xl);
+    border: 1px solid var(--pink-md);
+    border-radius: 50%;
+    color: var(--pink-md);
+    font-size: 18px;
     cursor: pointer;
-    box-shadow: 0 4px 0 #4ca64c;
-    margin-top: 6px;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s, transform 0.2s, background 0.2s;
+    transform: translateY(10px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
   }
 
-  .btn:active {
-    transform: translateY(3px);
-    box-shadow: 0 1px 0 #4ca64c;
+  #back-top.show { opacity: 1; visibility: visible; transform: translateY(0); }
+
+  #back-top:hover { background: var(--pink-xl); transform: translateY(-2px); }
+
+  /* ─── FOOTER ─── */
+  footer {
+    background: #fff;
+    border-top: 1px solid var(--border);
+    padding: 28px 56px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
   }
 
-  .confetti {
-    position: absolute;
-    top: -20px;
-    width: 9px;
-    height: 14px;
-    z-index: 1;
-    animation: confettiFall linear forwards;
+  footer p { font-size: 13px; color: var(--muted); }
+  footer span { color: var(--pink); }
+
+  /* ─── FEEDBACK FORM ─── */
+  .feedback-btn { margin-top:28px; padding:12px 28px; background:var(--pink-xl); color:var(--ink); border:1.5px solid var(--pink-md); border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; transition:background .2s; display:inline-flex; align-items:center; gap:8px; }
+  .feedback-btn:hover { background:var(--bg-3); }
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9998; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .modal-overlay.hidden { display:none; }
+  .modal-content { background:#fff; border:1px solid var(--border); border-radius:14px; padding:32px; max-width:460px; width:100%; }
+  .modal-content h3 { font-family:'Cormorant Garamond',serif; font-size:24px; color:var(--ink); margin-bottom:20px; }
+  .modal-content input, .modal-content textarea { width:100%; padding:12px 16px; background:#f5f5f5; border:1px solid var(--border); border-radius:8px; color:var(--ink); font-size:14px; margin-bottom:14px; font-family:'DM Sans',sans-serif; }
+  .modal-content input:focus, .modal-content textarea:focus { outline:none; border-color:var(--pink-md); }
+  .modal-btns { display:flex; gap:12px; margin-top:6px; }
+
+  /* ─── FADE-IN ─── */
+  .fade {
+    opacity: 0; transform: translateY(22px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .fade.in { opacity: 1; transform: translateY(0); }
+
+  /* ─── CERT BANNER ─── */
+  .cert-banner {
+    display: flex; align-items: center; gap: 18px;
+    background: linear-gradient(135deg, var(--pink-xl), #fff);
+    border-radius: 14px; padding: 24px 30px;
+    margin-top: 24px;
+    border: 1px solid var(--pink-md);
+    box-shadow: 0 0 40px rgba(244,63,94,0.08), inset 0 1px 0 rgba(244,63,94,0.06);
+    position: relative;
+    overflow: hidden;
   }
 
-  @keyframes confettiFall {
-    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-    100% { transform: translateY(420px) rotate(540deg); opacity: 0.2; }
+  .cert-banner::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at 30% 50%, rgba(244,63,94,0.04), transparent 70%);
+    pointer-events: none;
+  }
+
+  .cert-icon { font-size: 40px; flex-shrink: 0; }
+
+  .cert-text h4 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px; font-weight: 700;
+    color: var(--ink); margin-bottom: 4px;
+  }
+
+  .cert-text p { font-size: 13px; color: var(--muted); }
+
+  .cert-badge {
+    margin-left: auto; flex-shrink: 0;
+    background: var(--yellow); color: var(--ink);
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 6px 14px; border-radius: 6px;
+  }
+
+  /* ─── AI MASTERY ─── */
+  .mastery-intro {
+    font-size: 15px; font-weight: 300;
+    color: var(--muted); line-height: 1.7;
+    margin-bottom: 20px;
+    max-width: 640px;
+  }
+
+  .mastery-part {
+    margin-top: 44px;
+  }
+
+  .mastery-part-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .mastery-part-num {
+    font-size: 11px; font-weight: 700;
+    color: #fff; background: var(--pink);
+    width: 28px; height: 28px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .mastery-part-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px; font-weight: 700;
+    color: var(--ink);
+  }
+
+  .mastery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+  }
+
+  .mastery-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: border-color 0.25s, box-shadow 0.25s;
+  }
+
+  .mastery-item:hover {
+    border-color: var(--pink-md);
+    box-shadow: 0 4px 16px rgba(244,63,94,0.06);
+  }
+
+  .mastery-num {
+    font-size: 11px; font-weight: 700;
+    color: var(--pink-md); background: var(--pink-xl);
+    width: 24px; height: 24px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+  }
+
+  .mastery-name {
+    font-size: 13.5px; font-weight: 600;
+    color: var(--ink); margin-bottom: 3px;
+  }
+
+  .mastery-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  .tools-row {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-top: 32px;
+  }
+
+  .tool-pill {
+    display: flex; align-items: center; gap: 7px;
+    padding: 8px 16px;
+    background: #ffffff;
+    border: 1.5px solid var(--border);
+    border-radius: 99px;
+    font-size: 13.5px; font-weight: 500;
+    color: var(--ink);
+    transition: border-color 0.2s;
+  }
+
+  .tool-pill:hover { border-color: var(--pink); }
+
+  /* ─── GUIDE SECTION ─── */
+  .guide-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px; margin-top: 48px;
+  }
+
+  .guide-card {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 28px 26px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: box-shadow 0.25s, transform 0.25s, border-color 0.25s;
+  }
+
+  .guide-card:hover {
+    box-shadow: 0 8px 28px rgba(244,63,94,0.06);
+    transform: translateY(-3px);
+    border-color: var(--pink-md);
+  }
+
+  .guide-icon { font-size: 30px; margin-bottom: 14px; }
+
+  .guide-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 21px; font-weight: 700;
+    color: var(--ink); margin-bottom: 8px;
+  }
+
+  .guide-desc { font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+  .guide-cta {
+    display: inline-block; margin-top: 16px;
+    font-size: 13px; font-weight: 600;
+    color: var(--pink); text-decoration: none;
+    border-bottom: 1.5px solid var(--pink-xl);
+    transition: border-color 0.2s;
+  }
+  .guide-cta:hover { border-color: var(--pink); }
+
+  @media (max-width: 900px) {
+    .strength-strip {
+      grid-template-columns: repeat(3, 1fr);
+      margin-top: -40px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .cert-banner { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .cert-badge { margin-left: 0; }
+    .guide-grid { grid-template-columns: 1fr; }
+    .testimonial-grid { grid-template-columns: 1fr; }
+    .strength-strip {
+      grid-template-columns: 1fr 1fr;
+      margin-top: -30px;
+      padding: 0 16px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    nav { padding: 14px 20px; }
+    .nav-links { display: none; }
+    .sec, #contact-section { padding: 68px 24px; }
+    .sec-alt .sec { padding: 68px 24px; }
+    .about-grid { grid-template-columns: 1fr; gap: 28px; }
+    .about-avatar { width: 140px; height: 140px; font-size: 56px; }
+    .edu-cards { grid-template-columns: 1fr; }
+    footer { padding: 20px 24px; }
+  }
+
+  @media (max-width: 500px) {
+    .strength-strip { grid-template-columns: 1fr; margin-top: -20px; }
+  }
+
+  @media print {
+    nav, #splash, .hero-scroll, #back-top, .feedback-btn, .guide-cta, .proj-link, #contact-section, footer, .btn-ghost, .btn-solid { display: none !important; }
+    body { font-size: 12pt; line-height: 1.5; color: #000; background: #fff; }
+    .sec { max-width: 100%; padding: 20pt 0; border: none; }
+    .hero-name { font-size: 28pt; }
+    .about-grid { grid-template-columns: 1fr; }
+    .strength-strip { margin-top: 0; grid-template-columns: repeat(3,1fr); gap: 8pt; }
+    .edu-cards, .proj-grid, .skills-grid, .hobbies-grid, .guide-grid, .testimonial-grid, .mastery-grid { grid-template-columns: 1fr 1fr; gap: 8pt; }
+    .proj-banner { height: auto; }
+    .cert-banner { break-inside: avoid; }
+    * { box-shadow: none !important; text-shadow: none !important; }
   }
 </style>
 </head>
 <body>
 
-<div class="stage" id="stage">
-  <div class="hud">
-    <div class="score-box" id="scoreBox">Score: 0</div>
-    <div class="title">🌼 Garden Whack 🦋</div>
-    <div class="speed-box" id="speedBox">Easy</div>
-  </div>
-
-  <div class="timer-wrap">
-    <div class="timer-bar-bg"><div class="timer-bar-fill" id="timerFill"></div></div>
-    <div class="timer-label" id="timerLabel">30s</div>
-  </div>
-
-  <div class="board" id="board"></div>
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splash-badge">Personal Portfolio</div>
+  <h1 class="splash-name">Fatimah <em>Noman</em></h1>
+  <p class="splash-sub">Web Game Developer · AI Prompting Expert · AI Educator</p>
+  <button class="splash-btn" onclick="openPortfolio()">
+    View Portfolio <span class="arrow">→</span>
+  </button>
 </div>
 
-<div class="overlay show" id="startOverlay">
-  <div class="panel start-screen" id="startPanel">
-    <div class="start-icon">🌼🦊🌻</div>
-    <h2>Garden Whack</h2>
-    <div class="high-score-line" id="startHighScore">High score: 0</div>
-    <button class="btn" id="startBtn">Start</button>
+<!-- NAV -->
+<nav>
+  <a class="nav-brand" href="#hero">FN</a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#education">Education</a></li>
+    <li><a href="#skills">Skills</a></li>
+    <li><a href="#projects">Games</a></li>
+    <li><a href="#mastery">AI Mastery</a></li>
+    <li><a href="#guide">Guidance</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="#" onclick="event.preventDefault();window.print()">📄 Resume</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-eyebrow">🏆 Certified Agentic AI Engineer <span style="opacity:0.3;">·</span> Panaversity 2025</div>
+  <h1 class="hero-name">Fatimah<br><em>Noman</em></h1>
+  <div class="hero-linkedin"><a href="https://linkedin.com/in/fatimahnoman" target="_blank">💼 linkedin.com/in/fatimahnoman</a></div>
+  <div class="hero-divider"></div>
+  <div class="hero-tagline">
+    <span>🎮 Web Game Developer</span>
+    <span class="dot">·</span>
+    <span>🤖 AI Prompting Expert</span>
+    <span class="dot">·</span>
+    <span>🧑‍🏫 AI Educator</span>
   </div>
-  <div class="panel" id="countdownPanel" style="display:none;">
-    <div class="countdown-num" id="countdownNum">3</div>
+  <p class="hero-desc">
+    I design AI-powered web games, professionally master ChatGPT, Claude &amp; Gemini,
+    and guide others through the complete AI Prompting 2026 curriculum.
+  </p>
+  <div class="hero-btns">
+    <a href="#projects" class="btn-solid">🎮 Play My Game</a>
+    <a href="#contact" class="btn-ghost">Let's Connect</a>
+    <a href="#" onclick="event.preventDefault();window.print()" class="btn-ghost" style="border-color:var(--pink);color:var(--pink);">📄 Resume</a>
+  </div>
+  <div class="hero-scroll">Scroll</div>
+</section>
+
+<!-- CORE STRENGTHS -->
+<div class="strength-strip">
+  <div class="strength-card">
+    <div class="strength-icon">🎮</div>
+    <div class="strength-title">Web Game Designer</div>
+    <div class="strength-desc">I build fully interactive browser games — like <a href="https://whack-a-mole-game-flax.vercel.app/" target="_blank">Whack-a-Mole</a> — with AI-powered features, animations, and sound.</div>
+  </div>
+  <div class="strength-card">
+    <div class="strength-icon">🤖</div>
+    <div class="strength-title">ChatGPT · Claude · Gemini</div>
+    <div class="strength-desc">Professional mastery of the world's top AI assistants — knowing exactly which tool to use and how to use it.</div>
+  </div>
+  <div class="strength-card">
+    <div class="strength-icon">📚</div>
+    <div class="strength-title">AI Prompting 2026</div>
+    <div class="strength-desc">Complete mastery of all 13 concepts from the Panaversity AI Agent Factory curriculum.</div>
+  </div>
+  <div class="strength-card">
+    <div class="strength-icon">🧑‍🏫</div>
+    <div class="strength-title">Professional Guide</div>
+    <div class="strength-desc">I teach students, businesses, and beginners how to use AI effectively and professionally.</div>
+  </div>
+  <div class="strength-card">
+    <div class="strength-icon">🏆</div>
+    <div class="strength-title">Certified Engineer</div>
+    <div class="strength-desc">Officially certified Agentic AI Engineer after completing the Summer Camp 2025 examination.</div>
   </div>
 </div>
 
-<div class="overlay" id="overlay">
-  <div class="panel">
-    <h2>Time's up!</h2>
-    <div id="highBadgeWrap"></div>
-    <div class="final-score" id="finalScoreNum">0</div>
-    <div class="stats-row">
-      <div class="stat-box"><div class="num" id="totalHits">0</div><div class="lab">total hits</div></div>
-      <div class="stat-box"><div class="num" id="hitsPerMin">0</div><div class="lab">hits / min</div></div>
+<!-- ABOUT -->
+<section id="about">
+  <div class="sec fade">
+    <div class="sec-label">Who I Am</div>
+    <h2 class="sec-heading">A builder who thinks<br>in possibilities.</h2>
+    <p class="sec-sub">The person behind the work.</p>
+    <div class="about-grid">
+      <div class="about-avatar"><img src="profile-image.jpg" alt="Fatimah Noman"></div>
+      <div class="about-body">
+        <p>
+          I'm <strong>Fatimah Noman</strong>, an <strong>Agentic AI Engineer</strong>
+          based in Karachi. My journey with technology started with a simple
+          question — <em>"what if machines could think?"</em> — and turned into
+          a hands-on mission to find out.
+        </p>
+        <p>
+          This summer I completed an intensive <strong>AI Summer Camp</strong>,
+          where I went from understanding the basics of AI to building real
+          intelligent systems. I now design and develop agents that don't just
+          respond — they reason, plan, and act.
+        </p>
+        <p>
+          I believe technology should serve people simply and powerfully.
+          Whether I'm talking to a friend, presenting to a business, or
+          building something new — my goal is always to make the complex
+          feel effortless.
+        </p>
+        <div class="about-tags">
+          <span class="tag">Agentic AI</span>
+          <span class="tag">Web Game Design</span>
+          <span class="tag">ChatGPT · Claude · Gemini</span>
+          <span class="tag">Prompt Engineering</span>
+          <span class="tag">AI Educator</span>
+          <span class="tag">Karachi, Pakistan</span>
+        </div>
+        <div class="stats-row">
+          <div class="stat-item">
+            <span class="stat-num">3</span>
+            <span class="stat-label">Live<br>Games</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-num">13</span>
+            <span class="stat-label">AI Concepts<br>Mastered</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-num">50+</span>
+            <span class="stat-label">Students<br>Trained</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-num">5</span>
+            <span class="stat-label">Workshops<br>Delivered</span>
+          </div>
+          <div class="avail-badge">⚡ Available for hire</div>
+        </div>
+        <div class="about-milestones">
+          <div class="milestone"><span>🏆</span> Certified Agentic AI Engineer — Panaversity 2025</div>
+          <div class="milestone"><span>🎮</span> 3 shipped browser games with live demos</div>
+          <div class="milestone"><span>📚</span> Mastered all 13 AI Prompting 2026 concepts</div>
+          <div class="milestone"><span>🧑‍🏫</span> Trained 50+ students & delivered 5 AI workshops</div>
+        </div>
+      </div>
     </div>
-    <button class="btn" id="playAgain">Play again</button>
+  </div>
+</section>
+
+<!-- EDUCATION -->
+<div class="sec-alt">
+<section id="education">
+  <div class="sec fade">
+    <div class="sec-label">Education</div>
+    <h2 class="sec-heading">Academic Foundation</h2>
+    <p class="sec-sub">The schools that shaped my thinking.</p>
+    <div class="edu-cards">
+
+      <div class="edu-card">
+        <div class="edu-icon">🎒</div>
+        <div class="edu-level">Matriculation</div>
+        <div class="edu-school">St. Patrick's Girls High School</div>
+        <div class="edu-detail">Karachi · Secondary School Certificate</div>
+      </div>
+
+      <div class="edu-card">
+        <div class="edu-icon">🎓</div>
+        <div class="edu-level">Intermediate</div>
+        <div class="edu-school">St. Patrick's College</div>
+        <div class="edu-detail">Karachi · Higher Secondary School Certificate</div>
+      </div>
+
+      <div class="edu-card" style="border-top-color: var(--pink-md);">
+        <div class="edu-icon">🤖</div>
+        <div class="edu-level">Certification</div>
+        <div class="edu-school">Agentic AI Summer Camp</div>
+        <div class="edu-detail">2025 · AI Engineering & Intelligent Systems</div>
+      </div>
+
+      <div class="edu-card" style="border-top-color: var(--pink-md);">
+        <div class="edu-icon">⚡</div>
+        <div class="edu-level">Specialization</div>
+        <div class="edu-school">Agentic AI Engineering</div>
+        <div class="edu-detail">LLMs · Autonomous Agents · Tool Use · Reasoning Systems</div>
+      </div>
+
+    </div>
+
+    <div class="cert-banner">
+      <div class="cert-icon">🏆</div>
+      <div class="cert-text">
+        <h4>Certified — Agentic AI Summer Camp 2025</h4>
+        <p>Completed a full examination at the end of camp and earned official certification in Agentic AI Engineering · Panaversity</p>
+      </div>
+      <div class="cert-badge">✓ Certified</div>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="sec fade">
+    <div class="sec-label">Skills</div>
+    <h2 class="sec-heading">What I Bring to the Table</h2>
+    <p class="sec-sub">Technical and creative skills built through real practice.</p>
+    <div class="skills-grid">
+
+      <div class="skill-card">
+        <div class="skill-icon">🎮</div>
+        <div class="skill-name">Web Game Development</div>
+        <div class="skill-desc">Building fully interactive browser games from scratch — with animations, scoring, adaptive difficulty, and sound effects.</div>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-icon">🧠</div>
+        <div class="skill-name">Agentic AI Systems</div>
+        <div class="skill-desc">Designing AI agents that can reason, use tools, and complete multi-step tasks autonomously.</div>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-icon">💬</div>
+        <div class="skill-name">Prompt Engineering</div>
+        <div class="skill-desc">Writing precise, effective prompts that consistently get excellent results from AI models.</div>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-icon">🛠️</div>
+        <div class="skill-name">ChatGPT, Claude & Gemini</div>
+        <div class="skill-desc">Professional-level mastery of the world's top AI assistants — knowing exactly which tool to use and how to use it effectively.</div>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-icon">🤖</div>
+        <div class="skill-name">Working with LLMs</div>
+        <div class="skill-desc">Hands-on experience with Claude, GPT, and other large language models for real tasks.</div>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-icon">🔗</div>
+        <div class="skill-name">Tool & API Integration</div>
+        <div class="skill-desc">Connecting AI models to external tools, APIs, and data sources to create powerful workflows.</div>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-icon">🧑‍🏫</div>
+        <div class="skill-name">AI Education & Guidance</div>
+        <div class="skill-desc">Teaching individuals and businesses how to use AI professionally — from basics to advanced prompting.</div>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-icon">⚖️</div>
+        <div class="skill-name">AI Ethics & Safety</div>
+        <div class="skill-desc">Understanding responsible AI — bias, fairness, and building systems that help, not harm.</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<div class="sec-alt">
+<section id="projects">
+  <div class="sec fade">
+    <div class="sec-label">Projects</div>
+    <h2 class="sec-heading">Built at Summer Camp</h2>
+    <p class="sec-sub">Real work I created during the AI Summer Camp 2025.</p>
+    <div class="proj-grid">
+
+      <div class="proj-card">
+        <div class="proj-banner" style="background: linear-gradient(135deg, #fdf2f8, #fbcfe8);"><img src="whack_a_mole.png" alt="Whack-a-Mole"></div>
+        <div class="proj-body">
+          <div class="proj-tag">Web Game <span class="game-badge">▶ Live Demo</span></div>
+          <div class="proj-title">01. Whimsical Whack-a-Mole</div>
+          <div class="proj-desc">
+            A fully designed browser game with adaptive AI difficulty,
+            particle effects, sound design, a 3×3 mole grid, countdown
+            timer, and a game-over screen with confetti.
+          </div>
+          <div class="proj-features"><span>🎯 Adaptive Difficulty</span><span>✨ Particles</span><span>🔊 Sound</span><span>🎉 Confetti</span></div>
+          <div class="proj-stack"><span style="background:#fee2e2;color:#991b1b;border-color:#fca5a5;">HTML</span><span style="background:#dbeafe;color:#1e40af;border-color:#93c5fd;">CSS</span><span style="background:#fef3c7;color:#92400e;border-color:#fcd34d;">JS</span><span style="background:#e0e7ff;color:#3730a3;border-color:#a5b4fc;">Canvas</span></div>
+          <a href="https://whack-a-mole-game-flax.vercel.app/" target="_blank" class="proj-link">▶ Play Live →</a>
+          <a href="https://github.com/Fatimahnoman/Whack-a-Mole-Game" target="_blank" class="proj-link" style="margin-left:14px;">📁 Source Code →</a>
+        </div>
+      </div>
+
+      <div class="proj-card">
+        <div class="proj-banner" style="background: linear-gradient(135deg, #fce7f3, #fbcfe8);"><img src="snake-game.png" alt="Snake Game"></div>
+        <div class="proj-body">
+          <div class="proj-tag">Web Game <span class="game-badge">▶ Live Demo</span></div>
+          <div class="proj-title">02. Snake Game</div>
+          <div class="proj-desc">
+            A classic Snake game built with HTML, CSS, and JavaScript —
+            with smooth controls, score tracking, and responsive design.
+          </div>
+          <div class="proj-features"><span>🎮 Smooth Controls</span><span>📊 Score Tracking</span><span>📱 Responsive</span></div>
+          <div class="proj-stack"><span style="background:#fee2e2;color:#991b1b;border-color:#fca5a5;">HTML</span><span style="background:#dbeafe;color:#1e40af;border-color:#93c5fd;">CSS</span><span style="background:#fef3c7;color:#92400e;border-color:#fcd34d;">JS</span><span style="background:#e0e7ff;color:#3730a3;border-color:#a5b4fc;">Game Loop</span></div>
+          <a href="https://snake-game-one-pearl.vercel.app/" target="_blank" class="proj-link">▶ Play Live →</a>
+          <a href="https://github.com/Fatimahnoman/Snake-Game" target="_blank" class="proj-link" style="margin-left:14px;">📁 Source Code →</a>
+        </div>
+      </div>
+
+      <div class="proj-card">
+        <div class="proj-banner" style="background: linear-gradient(135deg, #fce7f3, #fbcfe8);"><img src="madlibs.png" alt="Mad Libs Game"></div>
+        <div class="proj-body">
+          <div class="proj-tag">Web Game <span class="game-badge">▶ Live Demo</span></div>
+          <div class="proj-title">03. Mad Libs Game</div>
+          <div class="proj-desc">
+            A fun word-substitution game where players fill in blanks
+            to create hilarious stories — interactive and engaging.
+          </div>
+          <div class="proj-features"><span>📝 Word Substitution</span><span>🎲 Random Stories</span><span>🖱️ Interactive</span></div>
+          <div class="proj-stack"><span style="background:#fee2e2;color:#991b1b;border-color:#fca5a5;">HTML</span><span style="background:#dbeafe;color:#1e40af;border-color:#93c5fd;">CSS</span><span style="background:#fef3c7;color:#92400e;border-color:#fcd34d;">JS</span><span style="background:#e0e7ff;color:#3730a3;border-color:#a5b4fc;">DOM</span></div>
+          <a href="https://mad-libs-game-zeta.vercel.app/" target="_blank" class="proj-link">▶ Play Live →</a>
+          <a href="https://github.com/Fatimahnoman/MadLibs_Game" target="_blank" class="proj-link" style="margin-left:14px;">📁 Source Code →</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- AI PROMPTING MASTERY -->
+<section id="mastery">
+  <div class="sec fade">
+    <div class="sec-label">AI Prompting 2026</div>
+    <h2 class="sec-heading">13 Concepts I've Mastered</h2>
+    <p class="sec-sub">
+      From the Panaversity AI Agent Factory curriculum — the complete
+      foundation of professional AI use in 2026.
+    </p>
+    <p class="mastery-intro">
+      The official <a href="https://agentfactory.panaversity.org/docs/ai-prompting-2026" target="_blank" style="color:var(--pink);">AI Prompting 2026 crash course</a>
+      covers 13 concepts in 4 parts. I've studied, practiced, and can teach every one of them.
+    </p>
+
+    <div class="tools-row">
+      <div class="tool-pill">🤖 ChatGPT</div>
+      <div class="tool-pill">✦ Claude</div>
+      <div class="tool-pill">💎 Gemini</div>
+      <div class="tool-pill">📘 NotebookLM</div>
+    </div>
+
+    <!-- PART 1 -->
+    <div class="mastery-part">
+      <div class="mastery-part-header">
+        <div class="mastery-part-num">1</div>
+        <div class="mastery-part-title">How AI Knows Things</div>
+      </div>
+      <div class="mastery-grid">
+        <div class="mastery-item">
+          <div class="mastery-num">1</div>
+          <div>
+            <div class="mastery-name">Novice vs Power User</div>
+            <div class="mastery-desc">The difference between a one-line question and a full brief with context, files, and constraints.</div>
+          </div>
+        </div>
+        <div class="mastery-item">
+          <div class="mastery-num">2</div>
+          <div>
+            <div class="mastery-name">Pretrained Knowledge</div>
+            <div class="mastery-desc">What AI learned from internet text — and where its blind spots are (niche, private, recent data).</div>
+          </div>
+        </div>
+        <div class="mastery-item">
+          <div class="mastery-num">3</div>
+          <div>
+            <div class="mastery-name">3 Retrieval Modes</div>
+            <div class="mastery-desc">When AI answers from memory, fires off a web search, or runs deep research across dozens of sources.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PART 2 -->
+    <div class="mastery-part">
+      <div class="mastery-part-header">
+        <div class="mastery-part-num">2</div>
+        <div class="mastery-part-title">Talking to AI Well</div>
+      </div>
+      <div class="mastery-grid">
+        <div class="mastery-item">
+          <div class="mastery-num">4</div>
+          <div>
+            <div class="mastery-name">Context is the Whole Game</div>
+            <div class="mastery-desc">The 5-layer context stack — system prompt, tools, your prompt, history, and uploaded files.</div>
+          </div>
+        </div>
+        <div class="mastery-item">
+          <div class="mastery-num">5</div>
+          <div>
+            <div class="mastery-name">Reasoning (Think Hard)</div>
+            <div class="mastery-desc">Using extended thinking modes (o1, Claude's thinking) for complex multi-trade-off problems.</div>
+          </div>
+        </div>
+        <div class="mastery-item">
+          <div class="mastery-num">6</div>
+          <div>
+            <div class="mastery-name">Sycophancy Awareness</div>
+            <div class="mastery-desc">Recognising when AI agrees to please rather than to inform — and fixing it with neutral framing.</div>
+          </div>
+        </div>
+        <div class="mastery-item">
+          <div class="mastery-num">7</div>
+          <div>
+            <div class="mastery-name">Writing Great Prompts</div>
+            <div class="mastery-desc">Structure, constraints, audience, output format — the discipline of briefing AI like a colleague.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PART 3 -->
+    <div class="mastery-part">
+      <div class="mastery-part-header">
+        <div class="mastery-part-num">3</div>
+        <div class="mastery-part-title">Real Workflows</div>
+      </div>
+      <div class="mastery-grid">
+        <div class="mastery-item">
+          <div class="mastery-num">8</div>
+          <div>
+            <div class="mastery-name">Deep Research</div>
+            <div class="mastery-desc">Directing AI to do structured, multi-source research with source quality control and citations.</div>
+          </div>
+        </div>
+        <div class="mastery-item">
+          <div class="mastery-num">9</div>
+          <div>
+            <div class="mastery-name">AI Image Generation</div>
+            <div class="mastery-desc">Crafting prompts that produce consistent, intentional visual results.</div>
+          </div>
+        </div>
+        <div class="mastery-item">
+          <div class="mastery-num">10</div>
+          <div>
+            <div class="mastery-name">Data Analysis with AI</div>
+            <div class="mastery-desc">Uploading files and asking AI to extract insights, patterns, and summaries.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PART 4 -->
+    <div class="mastery-part">
+      <div class="mastery-part-header">
+        <div class="mastery-part-num">4</div>
+        <div class="mastery-part-title">Beyond Chat</div>
+      </div>
+      <div class="mastery-grid">
+        <div class="mastery-item">
+          <div class="mastery-num">11</div>
+          <div>
+            <div class="mastery-name">Desktop Apps & AI Assistants</div>
+            <div class="mastery-desc">Using Claude Desktop, ChatGPT app, Gemini apps, Cowork, and OpenWork for real productivity.</div>
+          </div>
+        </div>
+        <div class="mastery-item">
+          <div class="mastery-num">12</div>
+          <div>
+            <div class="mastery-name">Tool Use & Function Calling</div>
+            <div class="mastery-desc">Connecting AI to external tools, APIs, and services to automate real tasks.</div>
+          </div>
+        </div>
+        <div class="mastery-item">
+          <div class="mastery-num">13</div>
+          <div>
+            <div class="mastery-name">Choosing the Right Model</div>
+            <div class="mastery-desc">Knowing when to use ChatGPT, Claude, or Gemini — and understanding system prompts, projects, and context budgets.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- GUIDANCE SECTION -->
+<div class="sec-alt">
+<section id="guide">
+  <div class="sec fade">
+    <div class="sec-label">What I Offer</div>
+    <h2 class="sec-heading">Services & Packages</h2>
+    <p class="sec-sub">
+      Whether you're a student, a business, or a complete beginner —
+      I can teach you everything I've learned, professionally and clearly.
+    </p>
+    <div class="guide-grid">
+
+      <div class="guide-card">
+        <div class="guide-icon">🧑‍🎓</div>
+        <div class="guide-title">For Students & Beginners</div>
+        <div class="guide-desc">
+          I'll walk you through AI basics step by step — how to prompt
+          correctly, which tools to use, and how to apply AI to your
+          school or personal projects right now.
+        </div>
+        <a href="#contact" class="guide-cta">Book This →</a>
+      </div>
+
+      <div class="guide-card">
+        <div class="guide-icon">🏢</div>
+        <div class="guide-title">For Businesses</div>
+        <div class="guide-desc">
+          I can show your team how to use ChatGPT, Claude, and Gemini
+          professionally — saving hours of work every day with the right
+          workflows and prompting strategies.
+        </div>
+        <a href="#contact" class="guide-cta">Book This →</a>
+      </div>
+
+      <div class="guide-card">
+        <div class="guide-icon">📘</div>
+        <div class="guide-title">AI Prompting Workshops</div>
+        <div class="guide-desc">
+          Covering all 13 professional AI prompting concepts from the
+          Panaversity curriculum — context windows, reasoning models,
+          deep research, multimodal AI, and more.
+        </div>
+        <a href="#contact" class="guide-cta">Book This →</a>
+      </div>
+
+      <div class="guide-card">
+        <div class="guide-icon">🤝</div>
+        <div class="guide-title">1-on-1 Consultation</div>
+        <div class="guide-desc">
+          Have a specific AI challenge? I'll sit with you, understand
+          your goal, and guide you to the most effective solution —
+          using the best tools available in 2026.
+        </div>
+        <a href="#contact" class="guide-cta">Book This →</a>
+      </div>
+
+    </div>
+
+    <div style="text-align:center; margin-top:44px;">
+      <a href="#contact" class="btn-solid" style="font-size:15px; padding:15px 36px;">📩 Book a Free Consultation</a>
+      <p style="font-size:13px; color:var(--muted); margin-top:10px;">Email me — let's discuss how I can help you or your team</p>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- TESTIMONIALS -->
+<section id="testimonials">
+  <div class="sec fade">
+    <div class="sec-label">Kind Words</div>
+    <h2 class="sec-heading">What People Say</h2>
+    <p class="sec-sub">A few thoughts from people I've worked with.</p>
+    <div class="testimonial-grid">
+
+      <div class="testimonial-card">
+        <div class="testimonial-text">
+          Fatimah has a rare ability to make complex AI concepts feel simple
+          and practical. Her workshop on prompting completely changed how our
+          team approaches ChatGPT and Claude.
+        </div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">AK</div>
+          <div>
+            <div class="testimonial-name">Areeb Khan</div>
+            <div class="testimonial-role">Product Lead, TechVista</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial-card">
+        <div class="testimonial-text">
+          I hired Fatimah to build a browser game for our school event. She
+          delivered ahead of schedule, the design was beautiful, and the
+          students absolutely loved it.
+        </div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">SN</div>
+          <div>
+            <div class="testimonial-name">Sana Nadeem</div>
+            <div class="testimonial-role">Coordinator, Karachi Academy</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial-card">
+        <div class="testimonial-text">
+          As someone with zero coding background, I never thought I could
+          understand AI agents. Fatimah's step-by-step approach made
+          everything click. Highly recommend her as an educator.
+        </div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">ZA</div>
+          <div>
+            <div class="testimonial-name">Zain Ali</div>
+            <div class="testimonial-role">Freelance Writer</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial-card">
+        <div class="testimonial-text">
+          Fatimah stood out during the AI Summer Camp for her discipline,
+          curiosity, and quality of work. She consistently delivered
+          projects that exceeded expectations.
+        </div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">MM</div>
+          <div>
+            <div class="testimonial-name">Murtaza Malik</div>
+            <div class="testimonial-role">Instructor, Panaversity</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <button class="feedback-btn" onclick="showFeedbackForm()">✏️ Add Your Feedback</button>
+
+    <div id="feedback-modal" class="modal-overlay hidden" onclick="closeFeedbackForm(event)">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <h3>Share Your Feedback</h3>
+        <input type="text" id="fb-name" placeholder="Your Name" required>
+        <input type="text" id="fb-role" placeholder="Your Role (e.g. Student, Recruiter)" required>
+        <input type="url" id="fb-link" placeholder="LinkedIn / Profile URL (optional)">
+        <textarea id="fb-text" rows="4" placeholder="What do you think about this portfolio?" required></textarea>
+        <div class="modal-btns">
+          <button class="btn-solid" onclick="submitFeedback()">Submit Feedback</button>
+          <button class="btn-ghost" onclick="closeFeedbackForm()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOBBIES -->
+<section id="hobbies">
+  <div class="sec fade">
+    <div class="sec-label">Beyond Work</div>
+    <h2 class="sec-heading">What I Love Doing</h2>
+    <p class="sec-sub">The things that keep me curious and energized.</p>
+    <div class="hobbies-grid">
+
+      <div class="hobby-card">
+        <div class="hobby-icon">📚</div>
+        <div class="hobby-name">Reading</div>
+        <div class="hobby-desc">From science fiction to history — books are where I find my best ideas.</div>
+      </div>
+
+      <div class="hobby-card">
+        <div class="hobby-icon">✍️</div>
+        <div class="hobby-name">Writing</div>
+        <div class="hobby-desc">Turning complex ideas into clear, meaningful words that people understand.</div>
+      </div>
+
+      <div class="hobby-card">
+        <div class="hobby-icon">🌍</div>
+        <div class="hobby-name">Exploring</div>
+        <div class="hobby-desc">Discovering new places, cultures, and perspectives — near and far.</div>
+      </div>
+
+      <div class="hobby-card">
+        <div class="hobby-icon">🎯</div>
+        <div class="hobby-name">Problem Solving</div>
+        <div class="hobby-desc">Finding elegant solutions to messy problems — my favourite kind of challenge.</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+<div id="contact-section" class="fade">
+  <div class="sec-label">Get In Touch</div>
+  <h2 class="sec-heading" style="font-family:'Cormorant Garamond',serif; font-size:clamp(32px,4vw,50px); margin-bottom:14px; letter-spacing:-1px;">
+    Let's Work Together
+  </h2>
+  <p class="sec-sub" style="max-width:460px; margin:0 auto 40px; font-size:16px; font-weight:300;">
+    Whether you're a business, a mentor, or just curious — I'd love to hear from you.
+  </p>
+  <div class="contact-links">
+    <a href="mailto:fatimahnoman452@gmail.com" class="contact-link">✉️ Email Me</a>
+    <a href="https://github.com/Fatimahnoman" target="_blank" class="contact-link">🐙 GitHub</a>
+    <a href="https://linkedin.com/in/fatimahnoman" target="_blank" class="contact-link">💼 LinkedIn</a>
+    <a href="https://instagram.com/fatimah_builds_ai" target="_blank" class="contact-link">📸 Instagram</a>
+    <a href="https://twitter.com/FatimahBuildAI" target="_blank" class="contact-link">🐦 Twitter / X</a>
+    <a href="https://myportfolio-git-main-fatima-nomans-projects.vercel.app/" target="_blank" class="contact-link">📂 Portfolio →</a>
   </div>
 </div>
+</section>
+
+<button id="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Back to top">↑</button>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2026 <span>Fatimah Noman</span>. All rights reserved.</p>
+  <p>🎮 Web Game Developer · 🤖 AI Prompting Expert · 🧑‍🏫 AI Educator</p>
+</footer>
 
 <script>
-  const MOLES = ['🐹', '🐻', '🐸', '🐵', '🐰', '🦊'];
-  const board = document.getElementById('board');
-  const scoreBox = document.getElementById('scoreBox');
-  const speedBox = document.getElementById('speedBox');
-  const timerFill = document.getElementById('timerFill');
-  const timerLabel = document.getElementById('timerLabel');
-  const overlay = document.getElementById('overlay');
-  const finalScoreNum = document.getElementById('finalScoreNum');
-  const totalHitsEl = document.getElementById('totalHits');
-  const hitsPerMinEl = document.getElementById('hitsPerMin');
-  const highBadgeWrap = document.getElementById('highBadgeWrap');
-  const playAgain = document.getElementById('playAgain');
-  const stage = document.getElementById('stage');
-  const startOverlay = document.getElementById('startOverlay');
-  const startBtn = document.getElementById('startBtn');
-  const startHighScore = document.getElementById('startHighScore');
-  const startPanel = document.getElementById('startPanel');
-  const countdownPanel = document.getElementById('countdownPanel');
-  const countdownNum = document.getElementById('countdownNum');
-
-  let score = 0;
-  let timeLeft = 30;
-  const TOTAL_TIME = 30;
-  let activeHoles = new Set();
-  let timerInterval = null;
-  let spawnTimeouts = [];
-  let running = false;
-  let highScore = parseInt(localStorage.getItem('gardenWhackHighScore') || '0', 10);
-
-  const holes = [];
-
-  // ---- audio ----
-  let audioCtx = null;
-  function getAudioCtx() {
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    return audioCtx;
-  }
-  function playHitSound(isQuick) {
-    try {
-      const ctx = getAudioCtx();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'square';
-      const startFreq = isQuick ? 760 : 520;
-      const endFreq = isQuick ? 320 : 180;
-      osc.frequency.setValueAtTime(startFreq, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(endFreq, ctx.currentTime + 0.12);
-      gain.gain.setValueAtTime(isQuick ? 0.5 : 0.4, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.16);
-    } catch (e) { /* audio unsupported, ignore */ }
+  function openPortfolio() {
+    document.getElementById('splash').classList.add('hidden');
+    sessionStorage.setItem('splashDone','1');
   }
 
-  // ---- speed system: tied to score, not time ----
-  const PARTICLE_COLORS = ['#ff7a3c', '#ffd23f', '#6fcf6f', '#56c4e0', '#e35385', '#a26fe0'];
-
-  function lerp(a, b, t) { return a + (b - a) * t; }
-
-  // ---- adaptive difficulty: blends recent scoring PACE with total SCORE ----
-  const PACE_WINDOW_MS = 6000;   // rolling window for measuring recent speed
-  const PACE_REF = 1.3;          // hits/sec considered "fast" (1 every ~0.77s)
-  const SCORE_REF = 20;          // score considered "high" for the baseline ramp
-  let recentHitTimes = [];
-  let smoothedSkill = 0;
-
-  function currentPaceRatio(now) {
-    recentHitTimes = recentHitTimes.filter(t => now - t <= PACE_WINDOW_MS);
-    const pace = recentHitTimes.length / (PACE_WINDOW_MS / 1000);
-    return Math.max(0, Math.min(1, pace / PACE_REF));
+  if (sessionStorage.getItem('splashDone')) {
+    document.getElementById('splash').classList.add('hidden');
+  } else {
+    setTimeout(() => {
+      const s = document.getElementById('splash');
+      if (!s.classList.contains('hidden')) openPortfolio();
+    }, 2500);
   }
 
-  function getDifficulty() {
-    const now = Date.now();
-    const paceRatio = currentPaceRatio(now);
-    const scoreRatio = Math.max(0, Math.min(1, score / SCORE_REF));
-    const rawSkill = 0.6 * paceRatio + 0.4 * scoreRatio;
-    smoothedSkill = smoothedSkill * 0.8 + rawSkill * 0.2;
+  function showFeedbackForm() { document.getElementById('feedback-modal').classList.remove('hidden'); }
 
-    const t = smoothedSkill;
-    const visibleMs = lerp(2500, 700, t);
-    const minGap = lerp(600, 250, t);
-    const maxGap = lerp(950, 480, t);
-    let label = 'Easy', cls = '';
-    if (t >= 0.65) { label = 'Frenzy'; cls = 'frenzy'; }
-    else if (t >= 0.32) { label = 'Fast'; cls = 'fast'; }
-    return { label, visibleMs, minGap, maxGap, cls, skill: t };
+  function closeFeedbackForm(e) { if(!e || !e.target || e.target.id==='feedback-modal') document.getElementById('feedback-modal').classList.add('hidden'); }
+
+  function submitFeedback() {
+    const name = document.getElementById('fb-name').value.trim();
+    const role = document.getElementById('fb-role').value.trim();
+    const link = document.getElementById('fb-link').value.trim();
+    const text = document.getElementById('fb-text').value.trim();
+    if (!name || !role || !text) { alert('Please fill all fields'); return; }
+
+    const entry = { name, role, link, text, id: Date.now() };
+    const saved = JSON.parse(localStorage.getItem('testimonials') || '[]');
+    saved.push(entry);
+    localStorage.setItem('testimonials', JSON.stringify(saved));
+
+    renderTestimonial(entry);
+    document.getElementById('fb-name').value = '';
+    document.getElementById('fb-role').value = '';
+    document.getElementById('fb-link').value = '';
+    document.getElementById('fb-text').value = '';
+    closeFeedbackForm();
   }
 
-  function updateSpeedLabel() {
-    const d = getDifficulty();
-    speedBox.textContent = d.label;
-    speedBox.className = 'speed-box' + (d.cls ? ' ' + d.cls : '');
+  function renderTestimonial(entry) {
+    const grid = document.querySelector('.testimonial-grid');
+    const initials = entry.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const card = document.createElement('div');
+    card.className = 'testimonial-card';
+    card.id = 'fb-' + entry.id;
+    const linkHtml = entry.link ? ' <a href="' + entry.link + '" target="_blank" style="color:var(--pink);text-decoration:none;font-weight:500;">↗</a>' : '';
+    card.innerHTML = '<div class="testimonial-text">' + entry.text + '</div><div class="testimonial-author"><div class="testimonial-avatar">' + initials + '</div><div><div class="testimonial-name">' + entry.name + linkHtml + '</div><div class="testimonial-role">' + entry.role + '</div></div></div>';
+    grid.appendChild(card);
+    requestAnimationFrame(() => card.classList.add('in'));
   }
 
-  function buildBoard() {
-    board.innerHTML = '';
-    holes.length = 0;
-    for (let i = 0; i < 9; i++) {
-      const hole = document.createElement('div');
-      hole.className = 'hole';
-      hole.dataset.index = i;
-
-      const rim = document.createElement('div');
-      rim.className = 'dirt-rim';
-
-      const rimLight = document.createElement('div');
-      rimLight.className = 'hole-rim-light';
-
-      const dark = document.createElement('div');
-      dark.className = 'hole-dark';
-
-      const moleWrap = document.createElement('div');
-      moleWrap.className = 'mole-wrap';
-
-      const mole = document.createElement('div');
-      mole.className = 'mole';
-      mole.textContent = MOLES[0];
-
-      moleWrap.appendChild(mole);
-      hole.appendChild(rim);
-      hole.appendChild(rimLight);
-      hole.appendChild(dark);
-      hole.appendChild(moleWrap);
-
-      hole.addEventListener('click', (e) => whack(hole, i, e));
-
-      board.appendChild(hole);
-      holes.push({ el: hole, mole, moleWrap, hideTimeout: null, spawnTime: 0 });
-    }
-  }
-
-  function randomEmptyHole() {
-    const emptyIndices = holes.map((h, i) => i).filter(i => !activeHoles.has(i));
-    if (emptyIndices.length === 0) return null;
-    return emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
-  }
-
-  const ANTICIPATION_MS = 260;
-
-  function popUpMole(skipAnticipation) {
-    if (!running) return;
-    const idx = randomEmptyHole();
-    if (idx === null) { scheduleNextSpawn(); return; }
-
-    const holeData = holes[idx];
-    activeHoles.add(idx); // reserve this hole immediately so it can't be picked again
-
-    function reveal() {
-      if (!running) return;
-      holeData.el.classList.remove('anticipating');
-      const d = getDifficulty();
-      holeData.mole.textContent = MOLES[Math.floor(Math.random() * MOLES.length)];
-      holeData.el.classList.add('up');
-      holeData.spawnTime = Date.now();
-
-      holeData.hideTimeout = setTimeout(() => {
-        if (holeData.el.classList.contains('up')) {
-          holeData.el.classList.remove('up');
-          activeHoles.delete(idx);
-        }
-      }, d.visibleMs);
-    }
-
-    if (skipAnticipation) {
-      reveal();
-    } else {
-      holeData.el.classList.add('anticipating');
-      const t = setTimeout(reveal, ANTICIPATION_MS);
-      spawnTimeouts.push(t);
-    }
-
-    scheduleNextSpawn();
-  }
-
-  function scheduleNextSpawn() {
-    if (!running) return;
-    const d = getDifficulty();
-    const delay = d.minGap + Math.random() * (d.maxGap - d.minGap);
-    const t = setTimeout(popUpMole, delay);
-    spawnTimeouts.push(t);
-  }
-
-  function spawnParticles(hole, count) {
-    count = count || 10;
-    for (let i = 0; i < count; i++) {
-      const p = document.createElement('div');
-      p.className = 'particle';
-      const color = PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)];
-      p.style.background = color;
-      const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
-      const dist = 40 + Math.random() * 30;
-      const dx = Math.cos(angle) * dist;
-      const dy = Math.sin(angle) * dist;
-      p.style.setProperty('--dx', dx + 'px');
-      p.style.setProperty('--dy', dy + 'px');
-      p.animate([
-        { transform: 'translate(-50%,-50%) scale(1)', opacity: 1 },
-        { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0.3)`, opacity: 0 }
-      ], { duration: 500 + Math.random() * 200, easing: 'ease-out' });
-      hole.appendChild(p);
-      setTimeout(() => p.remove(), 750);
-    }
-  }
-
-  function shakeScreen() {
-    stage.classList.remove('shake');
-    void stage.offsetWidth;
-    stage.classList.add('shake');
-    setTimeout(() => stage.classList.remove('shake'), 260);
-  }
-
-  let totalHits = 0;
-  let gameStartTime = 0;
-
-  function whack(hole, idx, evt) {
-    if (!running) return;
-    if (!hole.classList.contains('up')) return;
-
-    clearTimeout(holes[idx].hideTimeout);
-    hole.classList.remove('up');
-    hole.classList.add('whacked');
-    activeHoles.delete(idx);
-
-    const reactionMs = Date.now() - holes[idx].spawnTime;
-    const isQuick = reactionMs < 400;
-    const gained = isQuick ? 2 : 1;
-    score += gained;
-    totalHits += 1;
-    recentHitTimes.push(Date.now());
-    scoreBox.textContent = 'Score: ' + score;
-    updateSpeedLabel();
-
-    spawnParticles(hole, isQuick ? 18 : 10);
-    shakeScreen();
-    playHitSound(isQuick);
-
-    if (isQuick) {
-      const tag = document.createElement('div');
-      tag.className = 'reaction-tag';
-      tag.textContent = 'Quick!';
-      hole.appendChild(tag);
-      setTimeout(() => tag.remove(), 800);
-    }
-
-    const pop = document.createElement('div');
-    pop.className = 'score-pop';
-    pop.textContent = '+' + gained;
-    hole.appendChild(pop);
-    setTimeout(() => pop.remove(), 800);
-
-    setTimeout(() => hole.classList.remove('whacked'), 140);
-  }
-
-  function updateTimerBar() {
-    const pct = (timeLeft / TOTAL_TIME) * 100;
-    timerFill.style.width = pct + '%';
-    timerLabel.textContent = timeLeft + 's';
-    if (pct > 50) timerFill.style.background = '#6fcf6f';
-    else if (pct > 20) timerFill.style.background = '#f4c542';
-    else timerFill.style.background = '#e35353';
-  }
-
-  function launchConfetti() {
-    const panel = document.querySelector('.panel');
-    const colors = ['#ff7a3c', '#ffd23f', '#6fcf6f', '#56c4e0', '#e35385', '#a26fe0'];
-    for (let i = 0; i < 36; i++) {
-      const c = document.createElement('div');
-      c.className = 'confetti';
-      c.style.left = Math.random() * 100 + '%';
-      c.style.background = colors[Math.floor(Math.random() * colors.length)];
-      c.style.animationDuration = (1.2 + Math.random() * 1.2) + 's';
-      c.style.animationDelay = (Math.random() * 0.4) + 's';
-      overlay.appendChild(c);
-      setTimeout(() => c.remove(), 3200);
-    }
-  }
-
-  function startGame() {
-    score = 0;
-    totalHits = 0;
-    timeLeft = TOTAL_TIME;
-    recentHitTimes = [];
-    smoothedSkill = 0;
-    scoreBox.textContent = 'Score: 0';
-    updateSpeedLabel();
-    updateTimerBar();
-    overlay.classList.remove('show');
-    overlay.querySelectorAll('.confetti').forEach(c => c.remove());
-    activeHoles.clear();
-    spawnTimeouts.forEach(t => clearTimeout(t));
-    spawnTimeouts = [];
-
-    holes.forEach(h => {
-      clearTimeout(h.hideTimeout);
-      h.el.classList.remove('up', 'whacked', 'anticipating');
-    });
-
-    running = true;
-    gameStartTime = Date.now();
-
-    timerInterval = setInterval(() => {
-      timeLeft -= 1;
-      updateTimerBar();
-      updateSpeedLabel();
-      if (timeLeft <= 0) endGame();
-    }, 1000);
-
-    // instant start: first mole appears with zero delay, no anticipation wobble
-    popUpMole(true);
-  }
-
-  function endGame() {
-    running = false;
-    clearInterval(timerInterval);
-    spawnTimeouts.forEach(t => clearTimeout(t));
-    holes.forEach(h => {
-      clearTimeout(h.hideTimeout);
-      h.el.classList.remove('up', 'anticipating');
-    });
-
-    const elapsedMin = Math.max((Date.now() - gameStartTime) / 60000, 1 / 60);
-    const hpm = Math.round(totalHits / elapsedMin);
-
-    finalScoreNum.textContent = '0';
-    totalHitsEl.textContent = totalHits;
-    hitsPerMinEl.textContent = hpm;
-
-    highBadgeWrap.innerHTML = '';
-    const isNewHigh = score > highScore;
-    if (isNewHigh) {
-      highScore = score;
-      localStorage.setItem('gardenWhackHighScore', String(highScore));
-      const badge = document.createElement('div');
-      badge.className = 'high-score-badge';
-      badge.textContent = '🏆 New high score!';
-      highBadgeWrap.appendChild(badge);
-    }
-
-    overlay.classList.add('show');
-    launchConfetti();
-
-    // animate final score count-up
-    let display = 0;
-    const step = Math.max(1, Math.round(score / 20));
-    const countUp = setInterval(() => {
-      display = Math.min(score, display + step);
-      finalScoreNum.textContent = display;
-      if (display >= score) clearInterval(countUp);
-    }, 30);
-  }
-
-  function playTickSound(pitch) {
-    try {
-      const ctx = getAudioCtx();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(pitch, ctx.currentTime);
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.2);
-    } catch (e) { /* audio unsupported, ignore */ }
-  }
-
-  function runCountdown() {
-    startPanel.style.display = 'none';
-    countdownPanel.style.display = 'block';
-    let n = 3;
-    countdownNum.textContent = n;
-    countdownNum.classList.remove('pulse');
-    void countdownNum.offsetWidth;
-    countdownNum.classList.add('pulse');
-    playTickSound(440);
-
-    const tick = setInterval(() => {
-      n -= 1;
-      if (n <= 0) {
-        clearInterval(tick);
-        startOverlay.classList.remove('show');
-        countdownPanel.style.display = 'none';
-        startPanel.style.display = '';
-        startGame();
-        return;
-      }
-      countdownNum.textContent = n;
-      countdownNum.classList.remove('pulse');
-      void countdownNum.offsetWidth;
-      countdownNum.classList.add('pulse');
-      playTickSound(440 + (3 - n) * 60);
-    }, 600);
-  }
-
-  playAgain.addEventListener('click', () => {
-    getAudioCtx();
-    startGame();
+  document.addEventListener('DOMContentLoaded', function() {
+    const saved = JSON.parse(localStorage.getItem('testimonials') || '[]');
+    saved.forEach(renderTestimonial);
   });
 
-  startBtn.addEventListener('click', () => {
-    getAudioCtx();
-    runCountdown();
-  });
+  const faders = document.querySelectorAll('.fade');
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.08 });
+  faders.forEach(f => io.observe(f));
 
-  startHighScore.textContent = 'High score: ' + highScore;
-  buildBoard();
+  const cards = document.querySelectorAll('.testimonial-card');
+  const cardIo = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); cardIo.unobserve(e.target); } });
+  }, { threshold: 0.2 });
+  cards.forEach(c => cardIo.observe(c));
+
+  const sections = document.querySelectorAll('section[id], div[id]');
+  const links    = document.querySelectorAll('.nav-links a');
+  window.addEventListener('scroll', () => {
+    let cur = '';
+    sections.forEach(s => { if (window.scrollY >= s.offsetTop - 120) cur = s.id; });
+    links.forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + cur);
+    });
+    document.getElementById('back-top').classList.toggle('show', window.scrollY > 400);
+  }, { passive: true });
 </script>
-
 </body>
 </html>
